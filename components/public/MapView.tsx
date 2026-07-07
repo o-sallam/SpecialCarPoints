@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -22,17 +22,22 @@ export default function MapView({ points, selectedId, onSelect }: MapViewProps) 
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
+  const [activated, setActivated] = useState(false)
 
   useEffect(() => {
     if (mapContainerRef.current && !mapRef.current) {
-      mapRef.current = L.map(mapContainerRef.current, {
+      const map = L.map(mapContainerRef.current, {
         zoomControl: true,
         attributionControl: false,
+        scrollWheelZoom: false,
+        dragging: false,
       }).setView([24.7136, 46.6753], 6)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-      }).addTo(mapRef.current)
+      }).addTo(map)
+
+      mapRef.current = map
     }
 
     return () => {
@@ -42,6 +47,23 @@ export default function MapView({ points, selectedId, onSelect }: MapViewProps) 
       }
     }
   }, [])
+
+  function activateMap() {
+    if (!activated) setActivated(true)
+  }
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    if (activated) {
+      map.scrollWheelZoom.enable()
+      map.dragging.enable()
+    } else {
+      map.scrollWheelZoom.disable()
+      map.dragging.disable()
+    }
+  }, [activated])
 
   useEffect(() => {
     const map = mapRef.current
@@ -99,5 +121,16 @@ export default function MapView({ points, selectedId, onSelect }: MapViewProps) 
     }
   }, [selectedId])
 
-  return <div ref={mapContainerRef} className="w-full h-full min-h-[400px] rounded-[var(--radius-lg)] overflow-hidden z-0" />
+  return (
+    <div className="relative w-full h-full" onClick={activateMap} onTouchEnd={activateMap}>
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
+      {!activated && (
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/10 rounded-[var(--radius-lg)]">
+          <span className="px-4 py-2 rounded-full bg-[var(--color-surface)]/90 text-sm text-[var(--color-text)] shadow-lg backdrop-blur-sm border border-[var(--color-border)] cursor-pointer select-none">
+            اضغط للتفاعل مع الخريطة
+          </span>
+        </div>
+      )}
+    </div>
+  )
 }
