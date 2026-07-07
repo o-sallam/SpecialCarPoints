@@ -4,13 +4,16 @@ import { setSession } from '@/lib/session'
 import { loginSchema } from '@/lib/validators'
 import { z } from 'zod'
 
+// Pre-compute hash at import time to avoid dotenv $ expansion issues
+const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
+  || (process.env.ADMIN_PASSWORD ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10) : '')
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { username, password } = loginSchema.parse(body)
 
     const adminUsername = process.env.ADMIN_USERNAME
-    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
 
     if (!adminUsername || !adminPasswordHash) {
       return NextResponse.json(

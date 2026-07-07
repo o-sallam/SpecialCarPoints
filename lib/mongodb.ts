@@ -1,38 +1,55 @@
 import { MongoClient, Db } from 'mongodb'
+import { ensureSeeded } from './seed-data'
 
 const uri = process.env.MONGODB_URI || ''
 const dbName = process.env.MONGODB_DB || 'special_car'
 
-let client: MongoClient | null = null
-let db: Db | null = null
+let initPromise: Promise<{ client: MongoClient; db: Db }> | null = null
 
-if (process.env.NODE_ENV === 'development' && uri) {
-  const globalWithMongo = global as typeof globalThis & {
-    _mongoClient?: MongoClient
-    _mongoDb?: Db
+function getGlobal() {
+  return globalThis as typeof globalThis & {
+    __mongoClient?: MongoClient
+    __mongoDb?: Db
   }
+}
 
-  if (!globalWithMongo._mongoClient) {
-    client = new MongoClient(uri)
-    globalWithMongo._mongoClient = client
-    globalWithMongo._mongoDb = client.db(dbName)
-  }
-  client = globalWithMongo._mongoClient!
-  db = globalWithMongo._mongoDb!
+async function startMongod() {
+  const { MongoMemoryServer } = await import('mongodb-memory-server')
+  const mongod = await MongoMemoryServer.create({
+    instance: { dbName },
+  })
+  const u = mongod.getUri()
+  console.log('In-memory MongoDB URI:', u)
+  return u
 }
 
 export async function connectToDatabase() {
-  if (!uri) {
-    throw new Error('Please add your Mongo URI to .env.local')
+  const g = getGlobal()
+  if (g.__mongoClient && g.__mongoDb) {
+    return { client: g.__mongoClient, db: g.__mongoDb }
   }
 
-  if (!client) {
-    client = new MongoClient(uri)
-    await client.connect()
-    db = client.db(dbName)
+  if (initPromise) {
+    return initPromise
   }
 
-  return { client: client!, db: db! }
+  initPromise = (async () => {
+    let resolvedUri = uri
+    if (!resolvedUri) {
+      resolvedUri = await startMongod()
+    }
+
+    const c = new MongoClient(resolvedUri)
+    await c.connect()
+    const d = c.db(dbName)
+
+    await ensureSeeded(d)
+
+    g.__mongoClient = c
+    g.__mongoDb = d
+
+    return { client: c, db: d }
+  })()
+
+  return initPromise
 }
-
-export { db }

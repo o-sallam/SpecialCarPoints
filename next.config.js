@@ -8,6 +8,12 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('mongodb-memory-server', 'mongodb-memory-server-core')
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig
