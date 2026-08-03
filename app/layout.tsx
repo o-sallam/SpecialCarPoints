@@ -1,10 +1,18 @@
 import type { Metadata } from 'next'
-import { Cairo } from 'next/font/google'
+import { Cairo, Tajawal } from 'next/font/google'
 import './globals.css'
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
   variable: '--font-cairo',
+  display: 'swap',
+})
+
+const tajawal = Tajawal({
+  subsets: ['arabic', 'latin'],
+  weight: ['500', '700', '800'],
+  variable: '--font-tajawal',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -18,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -39,7 +47,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={cairo.variable} style={{ fontFamily: 'var(--font-cairo)' }}>{children}</body>
+      <body style={{ fontFamily: 'var(--font-body)' }}>{children}</body>
     </html>
   )
 }
