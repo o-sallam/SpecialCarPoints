@@ -15,9 +15,28 @@ const tajawal = Tajawal({
   display: 'swap',
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://special-car-points.vercel.app'
+
 export const metadata: Metadata = {
-  title: 'Special Car - Sales Points',
-  description: 'Find Special Car sales points across Saudi Arabia',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Special Car — نقاط البيع',
+    template: '%s | Special Car',
+  },
+  description:
+    'اعثر على أقرب نقطة بيع Special Car في المملكة العربية السعودية — تصفّح حسب المنطقة أو على الخريطة، وحدّد موقعك لترتيب الأقرب إليك.',
+  icons: {
+    icon: '/special-car-logo.avif',
+    shortcut: '/special-car-logo.avif',
+  },
+  openGraph: {
+    title: 'Special Car — نقاط البيع',
+    description:
+      'اعثر على أقرب نقطة بيع Special Car في المملكة العربية السعودية.',
+    siteName: 'Special Car',
+    type: 'website',
+    locale: 'ar_SA',
+  },
 }
 
 export default function RootLayout({

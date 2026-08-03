@@ -38,7 +38,7 @@ export default function TrustCallout({
             </p>
           </div>
           <a
-            href="/sales-points"
+            href="/"
             className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-pill)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--primary-700)] transition-transform hover:scale-[1.02]"
           >
             اعثر على أقرب نقطة

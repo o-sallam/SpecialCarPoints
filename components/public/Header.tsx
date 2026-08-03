@@ -31,16 +31,15 @@ export default function Header() {
       }`}
     >
       <div className="container flex items-center justify-between h-16">
-        <Link href="/" className="text-xl font-bold text-[var(--color-primary)]">
-          Special Car
+        <Link href="/" aria-label="Special Car — الصفحة الرئيسية" className="flex items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/special-car-logo.avif"
+            alt="Special Car"
+            className="h-8 w-auto object-contain sm:h-9"
+          />
         </Link>
-        <nav className="flex items-center gap-6">
-          <Link href="/" className="text-sm text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors">
-            الرئيسية
-          </Link>
-          <Link href="/sales-points" className="text-sm text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors">
-            نقاط البيع
-          </Link>
+        <nav className="flex items-center gap-4">
           <ThemeSwitcher />
         </nav>
       </div>
