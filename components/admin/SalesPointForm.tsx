@@ -1,9 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface District {
+  _id: string
+  name: string
+}
+
 interface SalesPointData {
+  districtId: string
   name: string
   location: string
   neighborhood: string
@@ -42,8 +48,10 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [districts, setDistricts] = useState<District[]>([])
   const [form, setForm] = useState<SalesPointData>(
     initialData || {
+      districtId: '',
       name: '',
       location: '',
       neighborhood: '',
@@ -54,6 +62,15 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
       socialLinks: { ...defaultSocial },
     }
   )
+
+  // Client-fetch the district list — same pattern the edit page uses to load
+  // the point. Kept in the form so both new + edit pages get it for free.
+  useEffect(() => {
+    fetch('/api/districts')
+      .then((r) => r.json())
+      .then((d) => setDistricts(Array.isArray(d) ? d : []))
+      .catch(() => setDistricts([]))
+  }, [])
 
   function update(field: string, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -112,6 +129,20 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
             className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             required
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">المنطقة</label>
+          <select
+            value={form.districtId}
+            onChange={(e) => update('districtId', e.target.value)}
+            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            required
+          >
+            <option value="" disabled>اختر المنطقة</option>
+            {districts.map((d) => (
+              <option key={d._id} value={d._id}>{d.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-[var(--color-text)] mb-1">الحي</label>

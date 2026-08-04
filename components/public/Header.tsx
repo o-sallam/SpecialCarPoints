@@ -36,7 +36,13 @@ export default function Header() {
           <img
             src="/special-car-logo.avif"
             alt="Special Car"
-            className="h-8 w-auto object-contain sm:h-9"
+            className="h-8 w-auto object-contain sm:h-9 dark:hidden"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/darkmode-special-car-logo.png"
+            alt="Special Car"
+            className="hidden h-8 w-auto object-contain sm:h-9 dark:block"
           />
         </Link>
         <nav className="flex items-center gap-4">

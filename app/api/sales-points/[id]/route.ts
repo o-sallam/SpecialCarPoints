@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
+import { revalidateTag } from 'next/cache'
 import { connectToDatabase } from '@/lib/mongodb'
+import { getDistrictsById } from '@/lib/data/districts'
 import { getSession } from '@/lib/session'
 import { salesPointSchema } from '@/lib/validators'
 import { z } from 'zod'
@@ -37,12 +39,18 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const data = salesPointSchema.parse(body)
 
+    const districtsById = await getDistrictsById()
+    if (!districtsById.has(data.districtId)) {
+      return NextResponse.json({ error: 'Invalid districtId' }, { status: 400 })
+    }
+
     const { db } = await connectToDatabase()
     const { id } = params
 
     const update = {
       $set: {
         ...data,
+        districtId: new ObjectId(data.districtId),
         socialLinks: {
           x: data.socialLinks.x || '',
           facebook: data.socialLinks.facebook || '',
@@ -67,6 +75,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
+    revalidateTag('places')
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -97,6 +106,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
+    revalidateTag('places')
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

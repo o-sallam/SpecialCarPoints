@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 export interface SalesPoint {
   _id: ObjectId
   legacyId: string | null
+  districtId: ObjectId
   name: string
   location: string
   neighborhood: string | null
@@ -28,6 +29,14 @@ export interface Settings {
   storeName: string
   storeUrl: string
   storeDescription: string
+}
+
+export interface District {
+  _id: ObjectId
+  /** Arabic label, e.g. 'منطقة الرياض' */
+  name: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface DataJsonItem {

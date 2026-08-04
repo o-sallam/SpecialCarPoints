@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import SalesPointForm from '@/components/admin/SalesPointForm'
 
 interface SalesPointData {
+  districtId: string
   name: string
   location: string
   neighborhood: string

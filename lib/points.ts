@@ -8,11 +8,15 @@
  * single config array — add real categories here later with one edit.
  */
 
-import { detectRegion, type RegionId } from './geo'
+import { REGIONS, type RegionId } from './geo'
 
 /** A single point-of-sale entry, normalized for the UI. */
 export interface POSEntry {
   _id: string
+  /** reference to the `districts` collection document (hex ObjectId) */
+  districtId: string
+  /** resolved Arabic district label (denormalized for display) */
+  districtName: string
   name: string
   location: string
   neighborhood: string | null
@@ -42,7 +46,11 @@ export const CATEGORY_META: CategoryMeta[] = [
 ]
 
 export interface Region {
-  id: Exclude<RegionId, 'all'>
+  /** district ObjectId hex string — stable React key */
+  id: string
+  /** semantic region id, used only for the glyph icon; districts carry no
+   * region id, so it is derived from the Arabic label via geo.ts's REGIONS */
+  regionId: Exclude<RegionId, 'all'>
   label: string
   entries: POSEntry[]
 }
@@ -54,24 +62,39 @@ export function filterByCategory(entries: POSEntry[], category: CategoryId): POS
   return entries.filter((e) => !e.vip)
 }
 
+/** Reverse lookup label → region id, used for the icon glyph only. */
+const REGION_ID_BY_LABEL: Map<string, Exclude<RegionId, 'all'>> = new Map()
+for (const r of REGIONS) REGION_ID_BY_LABEL.set(r.label, r.id)
+REGION_ID_BY_LABEL.set('مناطق أخرى', 'other')
+
 /**
- * Group entries by their derived Saudi region, drop empty regions, and sort
- * regions by entry count (desc) then label — so the busiest region leads.
+ * Group entries by their stored district (bucket key = e.districtId, display
+ * label = e.districtName), drop empty groups, and sort by entry count (desc)
+ * then label — so the busiest district leads. No keyword detection here:
+ * detectRegion() (lib/geo.ts) is only used by the migration script now.
  */
 export function groupPointsByRegion(entries: POSEntry[]): Region[] {
-  const buckets = new Map<Exclude<RegionId, 'all'>, POSEntry[]>()
+  const buckets = new Map<string, POSEntry[]>()
   for (const e of entries) {
-    const id = detectRegion(e.location || e.name || '')
-    const arr = buckets.get(id) ?? []
+    const key = e.districtId || 'unknown'
+    const arr = buckets.get(key) ?? []
     arr.push(e)
-    buckets.set(id, arr)
+    buckets.set(key, arr)
   }
   return [...buckets.entries()]
-    .map(([id, list]) => ({ id, label: regionTitle(id), entries: list }))
+    .map(([id, list]) => {
+      const label = list[0]?.districtName || 'مناطق أخرى'
+      return { id, regionId: REGION_ID_BY_LABEL.get(label) ?? 'other', label, entries: list }
+    })
     .sort((a, b) => b.entries.length - a.entries.length || a.label.localeCompare(b.label, 'ar'))
 }
 
-function regionTitle(id: Exclude<RegionId, 'all'>): string {
+/**
+ * Arabic label for a region id — the single source of truth for district
+ * names. The migration script copies these verbatim (never re-derived) so
+ * district labels and region labels cannot drift apart.
+ */
+export function regionTitle(id: Exclude<RegionId, 'all'>): string {
   if (id === 'other') return 'مناطق أخرى'
   const map: Record<string, string> = {
     riyadh: 'منطقة الرياض',

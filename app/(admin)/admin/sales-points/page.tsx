@@ -9,14 +9,24 @@ import VipBadge from '@/components/public/VipBadge'
 export default function AdminSalesPointsList() {
   const router = useRouter()
   const [data, setData] = useState<Record<string, unknown>[]>([])
+  const [districtNames, setDistrictNames] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
   const fetchData = useCallback(async () => {
-    const res = await fetch('/api/sales-points')
-    const json = await res.json()
-    setData(Array.isArray(json) ? json : [])
+    const [pointsRes, districtsRes] = await Promise.all([
+      fetch('/api/sales-points'),
+      fetch('/api/districts'),
+    ])
+    const points = await pointsRes.json()
+    const districts = await districtsRes.json()
+    const names: Record<string, string> = {}
+    for (const d of Array.isArray(districts) ? districts : []) {
+      names[d._id] = d.name
+    }
+    setDistrictNames(names)
+    setData(Array.isArray(points) ? points : [])
     setLoading(false)
   }, [])
 
@@ -36,6 +46,15 @@ export default function AdminSalesPointsList() {
   const columns = [
     { key: 'name', label: 'الاسم' },
     { key: 'location', label: 'الموقع' },
+    {
+      key: 'districtId',
+      label: 'المنطقة',
+      render: (item: Record<string, unknown>) => (
+        <span className="text-[var(--color-text-secondary)]">
+          {districtNames[item.districtId as string] ?? '-'}
+        </span>
+      ),
+    },
     { key: 'neighborhood', label: 'الحي' },
     {
       key: 'vip',

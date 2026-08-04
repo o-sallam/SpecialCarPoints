@@ -36,7 +36,7 @@ The palette intentionally moves away from a single flat brand blue toward a
 
 | Semantic | Light | Dark |
 |---|---|---|
-| `--color-surface` | `#ffffff` | `#161c2a` |
+| `--color-surface` | `#ffffff` | `#1a202e` |
 | `--color-background` | `#f4f6fa` | `#0b0f18` |
 | `--color-text` | `#0f172a` | `#e6edf6` |
 | `--color-text-secondary` | `#64748b` | `#93a0b3` |

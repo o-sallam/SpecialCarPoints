@@ -1,39 +1,27 @@
-import { connectToDatabase } from '@/lib/mongodb'
+import { getDistrictsById } from '@/lib/data/districts'
+import { getPlaces } from '@/lib/data/places'
 import AccordionLocator from '@/components/public/AccordionLocator'
 import type { POSEntry } from '@/lib/points'
 
+// Fallback ceiling only. Primary freshness is driven by the "places" data
+// cache tag (busted by revalidateTag('places') on every sales-point write),
+// so an admin-created point appears here without waiting for this window.
 export const revalidate = 60
 
 export default async function HomePage() {
   let points: POSEntry[] = []
 
   try {
-    const { db } = await connectToDatabase()
-    const docs = await db
-      .collection('sales_points')
-      .find(
-        {},
-        {
-          projection: {
-            _id: 1,
-            name: 1,
-            location: 1,
-            neighborhood: 1,
-            vip: 1,
-            googleMapUrl: 1,
-            lat: 1,
-            lng: 1,
-            socialLinks: 1,
-          },
-        },
-      )
-      .sort({ name: 1 })
-      .toArray()
+    const districtsById = await getDistrictsById()
+    const docs = await getPlaces()
 
     points = docs.map((p) => {
       const s = p.socialLinks || {}
+      const districtId = p.districtId?.toString() ?? ''
       return {
         _id: p._id.toString(),
+        districtId,
+        districtName: districtsById.get(districtId)?.name ?? 'مناطق أخرى',
         name: p.name,
         location: p.location,
         neighborhood: p.neighborhood || null,

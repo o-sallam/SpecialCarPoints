@@ -46,7 +46,7 @@ export default function RegionGroup({ region, defaultOpen = false, distanceOf, s
               : 'border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-secondary)]',
           ].join(' ')}
         >
-          <RegionIcon region={region.id} className="h-5 w-5" />
+          <RegionIcon region={region.regionId} className="h-5 w-5" />
         </span>
 
         <span className="min-w-0 flex-1">

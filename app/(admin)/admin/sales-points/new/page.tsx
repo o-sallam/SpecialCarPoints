@@ -6,7 +6,7 @@ import SalesPointForm from '@/components/admin/SalesPointForm'
 export default function NewSalesPointPage() {
   const router = useRouter()
 
-  async function handleSubmit(data: { name: string; location: string; neighborhood: string; googleMapUrl: string; vip: boolean; lat: number | null; lng: number | null; socialLinks: { x: string; facebook: string; whatsapp: string; linkedin: string; email: string; messenger: string; snapchat: string } }) {
+  async function handleSubmit(data: { districtId: string; name: string; location: string; neighborhood: string; googleMapUrl: string; vip: boolean; lat: number | null; lng: number | null; socialLinks: { x: string; facebook: string; whatsapp: string; linkedin: string; email: string; messenger: string; snapchat: string } }) {
     const res = await fetch('/api/sales-points', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
