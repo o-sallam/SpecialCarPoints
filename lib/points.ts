@@ -57,15 +57,16 @@ export interface Region {
 
 /**
  * Compose the human-readable sales-point name. UI-only — never persisted.
- *   "نقطة بيع " + cityType + " " + city + (" حي " + neighborhood | " " + extraLabel | "")
+ * Always prefixes city with "مدينة" regardless of stored city type.
+ *   "نقطة بيع مدينة " + city + (" حي " + neighborhood | " " + extraLabel | "")
  */
 export function composeDisplayName(
   cityName: string,
-  cityType: string,
+  cityType: string, // kept for backward compatibility, but unused
   neighborhoodName: string | null,
   extraLabel: string | null,
 ): string {
-  let s = 'نقطة بيع ' + cityType + ' ' + cityName
+  let s = 'نقطة بيع مدينة ' + cityName
   if (neighborhoodName) s += ' حي ' + neighborhoodName
   else if (extraLabel) s += ' ' + extraLabel
   return s
