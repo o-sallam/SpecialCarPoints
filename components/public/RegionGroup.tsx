@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import RegionIcon from './RegionIcon'
 import EntryCard from './EntryCard'
 import type { Region } from '@/lib/points'
 
@@ -46,7 +45,11 @@ export default function RegionGroup({ region, defaultOpen = false, distanceOf, s
               : 'border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-secondary)]',
           ].join(' ')}
         >
-          <RegionIcon region={region.regionId} className="h-5 w-5" />
+          {/* generic location pin — regions/districts were removed; groups are by city */}
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 21s-7-7.58-7-12a7 7 0 1 1 14 0c0 4.42-7 12-7 12Z" />
+            <circle cx="12" cy="9" r="2.5" />
+          </svg>
         </span>
 
         <span className="min-w-0 flex-1">

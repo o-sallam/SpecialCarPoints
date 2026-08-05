@@ -2,26 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import SalesPointForm from '@/components/admin/SalesPointForm'
+import SalesPointForm, { type SalesPointData } from '@/components/admin/SalesPointForm'
 
-interface SalesPointData {
-  districtId: string
-  name: string
-  location: string
-  neighborhood: string
-  googleMapUrl: string
-  vip: boolean
-  lat: number | null
-  lng: number | null
-  socialLinks: {
-    x: string
-    facebook: string
-    whatsapp: string
-    linkedin: string
-    email: string
-    messenger: string
-    snapchat: string
-  }
+const defaultSocial = {
+  x: '',
+  facebook: '',
+  whatsapp: '',
+  linkedin: '',
+  email: '',
+  messenger: '',
+  snapchat: '',
 }
 
 export default function EditSalesPointPage() {
@@ -33,8 +23,19 @@ export default function EditSalesPointPage() {
   useEffect(() => {
     fetch(`/api/sales-points/${params.id}`)
       .then((r) => r.json())
-      .then((data) => {
-        setInitialData(data)
+      .then((d) => {
+        // The [id] GET returns the raw doc; pick the fields the form edits.
+        // (cityId/neighborhoodId arrive as hex strings, ObjectId->JSON.)
+        setInitialData({
+          cityId: d.cityId || '',
+          neighborhoodId: d.neighborhoodId ?? null,
+          extraLabel: d.extraLabel ?? null,
+          googleMapUrl: d.googleMapUrl || '',
+          vip: !!d.vip,
+          lat: d.lat ?? null,
+          lng: d.lng ?? null,
+          socialLinks: d.socialLinks || { ...defaultSocial },
+        })
         setLoading(false)
       })
       .catch(() => setLoading(false))

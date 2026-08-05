@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 const links = [
   { href: '/admin', label: 'لوحة التحكم' },
   { href: '/admin/sales-points', label: 'نقاط البيع' },
-  { href: '/admin/districts', label: 'المناطق' },
   { href: '/admin/settings', label: 'الإعدادات' },
 ]
 

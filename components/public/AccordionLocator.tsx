@@ -7,7 +7,7 @@ import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
 import GeolocationButton from './GeolocationButton'
 import { haversineKm } from '@/lib/geo'
-import { filterByCategory, groupPointsByRegion, type CategoryId, type POSEntry } from '@/lib/points'
+import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false })
 
@@ -33,9 +33,10 @@ export default function AccordionLocator({ points }: Props) {
     if (!q) return points
     return points.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.location.toLowerCase().includes(q) ||
-        (p.neighborhood ? p.neighborhood.toLowerCase().includes(q) : false),
+        p.displayName.toLowerCase().includes(q) ||
+        p.cityName.toLowerCase().includes(q) ||
+        (p.neighborhoodName ? p.neighborhoodName.toLowerCase().includes(q) : false) ||
+        (p.extraLabel ? p.extraLabel.toLowerCase().includes(q) : false),
     )
   }, [points, query])
 
@@ -55,7 +56,7 @@ export default function AccordionLocator({ points }: Props) {
 
   // 3) group by region; when located, sort by nearest region + nearest entry first
   const groups = useMemo(() => {
-    const base = groupPointsByRegion(visible)
+    const base = groupByCity(visible)
     if (!userLocation) return base
     const minDist = (entries: POSEntry[]) =>
       entries.reduce((min, e) => {

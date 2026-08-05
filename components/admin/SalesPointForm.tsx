@@ -3,16 +3,20 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-interface District {
+interface CityLike {
   _id: string
   name: string
 }
-
-interface SalesPointData {
-  districtId: string
+interface NeighborhoodLike {
+  _id: string
   name: string
-  location: string
-  neighborhood: string
+  cityId: string
+}
+
+export interface SalesPointData {
+  cityId: string
+  neighborhoodId: string | null
+  extraLabel: string | null
   googleMapUrl: string
   vip: boolean
   lat: number | null
@@ -48,31 +52,35 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [districts, setDistricts] = useState<District[]>([])
+  const [cities, setCities] = useState<CityLike[]>([])
+  const [neighborhoods, setNeighborhoods] = useState<NeighborhoodLike[]>([])
   const [form, setForm] = useState<SalesPointData>(
     initialData || {
-      districtId: '',
-      name: '',
-      location: '',
-      neighborhood: '',
+      cityId: '',
+      neighborhoodId: null,
+      extraLabel: null,
       googleMapUrl: '',
       vip: false,
       lat: null,
       lng: null,
       socialLinks: { ...defaultSocial },
-    }
+    },
   )
 
-  // Client-fetch the district list — same pattern the edit page uses to load
-  // the point. Kept in the form so both new + edit pages get it for free.
   useEffect(() => {
-    fetch('/api/districts')
-      .then((r) => r.json())
-      .then((d) => setDistricts(Array.isArray(d) ? d : []))
-      .catch(() => setDistricts([]))
+    Promise.all([fetch('/api/cities'), fetch('/api/neighborhoods')])
+      .then(async ([c, n]) => Promise.all([c.json(), n.json()]))
+      .then(([c, n]) => {
+        setCities(Array.isArray(c) ? c : [])
+        setNeighborhoods(Array.isArray(n) ? n : [])
+      })
+      .catch(() => {
+        setCities([])
+        setNeighborhoods([])
+      })
   }, [])
 
-  function update(field: string, value: unknown) {
+  function update(field: keyof SalesPointData, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -89,13 +97,24 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
     setLoading(true)
 
     try {
-      await onSubmit(form)
+      // A point has EITHER a neighborhood OR an extraLabel (or neither) —
+      // never both. extraLabel is for non-neighborhood places (streets etc.).
+      const neighborhoodId = form.neighborhoodId || null
+      const payload: SalesPointData = {
+        ...form,
+        neighborhoodId,
+        extraLabel: neighborhoodId ? null : form.extraLabel?.trim() ? form.extraLabel.trim() : null,
+      }
+      await onSubmit(payload)
     } catch {
       setError('حدث خطأ أثناء الحفظ')
     } finally {
       setLoading(false)
     }
   }
+
+  const cityNeighborhoods = neighborhoods.filter((n) => n.cityId === form.cityId)
+  const noNeighborhood = !form.neighborhoodId
 
   const socialFields = [
     { key: 'x', label: 'X (Twitter)' },
@@ -111,46 +130,47 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">الاسم</label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => update('name', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">الموقع</label>
-          <input
-            type="text"
-            value={form.location}
-            onChange={(e) => update('location', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">المنطقة</label>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">المدينة</label>
           <select
-            value={form.districtId}
-            onChange={(e) => update('districtId', e.target.value)}
+            value={form.cityId}
+            onChange={(e) => update('cityId', e.target.value)}
             className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             required
           >
-            <option value="" disabled>اختر المنطقة</option>
-            {districts.map((d) => (
-              <option key={d._id} value={d._id}>{d.name}</option>
+            <option value="" disabled>اختر المدينة</option>
+            {cities.map((c) => (
+              <option key={c._id} value={c._id}>{c.name}</option>
             ))}
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-[var(--color-text)] mb-1">الحي</label>
+          <select
+            value={form.neighborhoodId ?? ''}
+            onChange={(e) => update('neighborhoodId', e.target.value || null)}
+            disabled={!form.cityId}
+            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-50"
+          >
+            <option value="">— لا يوجد (مدينة فقط) —</option>
+            {cityNeighborhoods.map((n) => (
+              <option key={n._id} value={n._id}>{n.name}</option>
+            ))}
+          </select>
+        </div>
+        {/* extraLabel: only relevant when no neighborhood is chosen (streets,
+            compound place names, etc.). Deliberately NOT a neighborhoods row. */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            نص إضافي (شارع / منطقة فرعية)
+            {!noNeighborhood && <span className="text-[var(--color-text-muted)]"> — يُستخدم فقط بدون حي</span>}
+          </label>
           <input
             type="text"
-            value={form.neighborhood}
-            onChange={(e) => update('neighborhood', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            value={form.extraLabel ?? ''}
+            onChange={(e) => update('extraLabel', e.target.value)}
+            disabled={!noNeighborhood}
+            placeholder={noNeighborhood ? 'مثال: شارع الاصفر، عريعرة' : ''}
+            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-50"
           />
         </div>
         <div>
@@ -208,7 +228,7 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
                 type={key === 'email' ? 'email' : 'text'}
                 value={form.socialLinks[key]}
                 onChange={(e) => updateSocial(key, e.target.value)}
-                className="w-full px-4 py-2 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
+                className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
               />
             </div>
           ))}

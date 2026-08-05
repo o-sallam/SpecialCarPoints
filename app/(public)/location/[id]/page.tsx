@@ -4,6 +4,9 @@ import { ObjectId } from 'mongodb'
 import dynamic from 'next/dynamic'
 import VipBadge from '@/components/public/VipBadge'
 import SocialIcons from '@/components/public/SocialIcons'
+import { getCitiesById } from '@/lib/data/cities'
+import { getNeighborhoodsById } from '@/lib/data/neighborhoods'
+import { composeDisplayName } from '@/lib/points'
 
 const DetailMap = dynamic(() => import('./DetailMap'), { ssr: false })
 
@@ -25,25 +28,38 @@ export async function generateStaticParams() {
   }
 }
 
+async function resolveDoc(id: string) {
+  const { db } = await connectToDatabase()
+  if (ObjectId.isValid(id)) {
+    return db.collection('sales_points').findOne({ _id: new ObjectId(id) })
+  }
+  return db.collection('sales_points').findOne({ legacyId: id })
+}
+
 export async function generateMetadata({ params }: { params: { id: string } }) {
   if (!process.env.MONGODB_URI) return { title: 'Special Car' }
 
   try {
-    const { db } = await connectToDatabase()
-    const { id } = params
-
-    let doc
-    if (ObjectId.isValid(id)) {
-      doc = await db.collection('sales_points').findOne({ _id: new ObjectId(id) })
-    } else {
-      doc = await db.collection('sales_points').findOne({ legacyId: id })
-    }
-
+    const doc = await resolveDoc(params.id)
     if (!doc) return { title: 'غير موجود - Special Car' }
 
+    const [citiesById, neighborhoodsById] = await Promise.all([
+      getCitiesById(),
+      getNeighborhoodsById(),
+    ])
+    const cityName = (doc.cityId && citiesById.get(String(doc.cityId))?.name) || ''
+    const neighborhoodName = doc.neighborhoodId
+      ? neighborhoodsById.get(String(doc.neighborhoodId))?.name ?? null
+      : null
+    const extraLabel = doc.extraLabel ?? null
+    const displayName = composeDisplayName(cityName, neighborhoodName, extraLabel)
+    const locationLine =
+      cityName +
+      (neighborhoodName ? ` - حي ${neighborhoodName}` : extraLabel ? ` - ${extraLabel}` : '')
+
     return {
-      title: `${doc.name} - Special Car`,
-      description: `${doc.location}${doc.neighborhood ? ` - ${doc.neighborhood}` : ''} | نقطة بيع Special Car`,
+      title: `${displayName} - Special Car`,
+      description: `${locationLine} | نقطة بيع Special Car`,
     }
   } catch {
     return { title: 'Special Car' }
@@ -51,25 +67,28 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 export default async function LocationDetailPage({ params }: { params: { id: string } }) {
-  const { db } = await connectToDatabase()
-  const { id } = params
-
-  let doc
-  if (ObjectId.isValid(id)) {
-    doc = await db.collection('sales_points').findOne({ _id: new ObjectId(id) })
-  } else {
-    doc = await db.collection('sales_points').findOne({ legacyId: id })
-  }
-
+  const doc = await resolveDoc(params.id)
   if (!doc) {
     notFound()
   }
 
+  const [citiesById, neighborhoodsById] = await Promise.all([
+    getCitiesById(),
+    getNeighborhoodsById(),
+  ])
+  const cityName = (doc.cityId && citiesById.get(String(doc.cityId))?.name) || 'مدن أخرى'
+  const neighborhoodName = doc.neighborhoodId
+    ? neighborhoodsById.get(String(doc.neighborhoodId))?.name ?? null
+    : null
+  const extraLabel = doc.extraLabel ?? null
+  const displayName = composeDisplayName(cityName, neighborhoodName, extraLabel)
+
   const point = {
     _id: doc._id.toString(),
-    name: doc.name,
-    location: doc.location,
-    neighborhood: doc.neighborhood || null,
+    displayName,
+    cityName,
+    neighborhoodName,
+    extraLabel,
     vip: doc.vip,
     googleMapUrl: doc.googleMapUrl,
     lat: doc.lat ?? null,
@@ -82,20 +101,23 @@ export default async function LocationDetailPage({ params }: { params: { id: str
       <div className="max-w-2xl mx-auto">
         <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-6 md:p-8">
           <div className="flex items-start justify-between gap-4 mb-4">
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">{point.name}</h1>
+            <h1 className="text-2xl font-bold text-[var(--color-text)]">{point.displayName}</h1>
             <VipBadge vip={point.vip} />
           </div>
 
           <div className="space-y-2 mb-6">
-            <p className="text-[var(--color-text-secondary)]">{point.location}</p>
-            {point.neighborhood && (
-              <p className="text-[var(--color-text-secondary)]">{point.neighborhood}</p>
+            <p className="text-[var(--color-text-secondary)]">{point.cityName}</p>
+            {point.neighborhoodName && (
+              <p className="text-[var(--color-text-secondary)]">حي {point.neighborhoodName}</p>
+            )}
+            {point.extraLabel && (
+              <p className="text-[var(--color-text-secondary)]">{point.extraLabel}</p>
             )}
           </div>
 
           {point.lat && point.lng && (
             <div className="mb-6 rounded-[var(--radius-md)] overflow-hidden h-[300px]">
-              <DetailMap lat={point.lat} lng={point.lng} name={point.name} />
+              <DetailMap lat={point.lat} lng={point.lng} name={point.displayName} />
             </div>
           )}
 

@@ -48,7 +48,7 @@ export default function EntryCard({ entry, distanceKm, isSelected, onSelect }: P
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h4 className="truncate text-sm font-bold text-[var(--color-text)]">{entry.name}</h4>
+          <h4 className="truncate text-sm font-bold text-[var(--color-text)]">{entry.displayName}</h4>
           {entry.vip && (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[var(--color-accent-hover)]">
               VIP
@@ -57,8 +57,8 @@ export default function EntryCard({ entry, distanceKm, isSelected, onSelect }: P
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--color-text-secondary)]">
           <span className="truncate">
-            {entry.location}
-            {entry.neighborhood ? <span className="text-[var(--color-text-muted)]"> • {entry.neighborhood}</span> : null}
+            {entry.cityName}
+            {entry.neighborhoodName ? <span className="text-[var(--color-text-muted)]"> • حي {entry.neighborhoodName}</span> : entry.extraLabel ? <span className="text-[var(--color-text-muted)]"> • {entry.extraLabel}</span> : null}
           </span>
           {distanceKm != null && (
             <span className="tnum inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--color-accent-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--color-accent-hover)]">

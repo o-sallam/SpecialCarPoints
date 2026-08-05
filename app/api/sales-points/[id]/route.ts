@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { revalidateTag } from 'next/cache'
 import { connectToDatabase } from '@/lib/mongodb'
-import { getDistrictsById } from '@/lib/data/districts'
+import { getCitiesById } from '@/lib/data/cities'
+import { getNeighborhoodsById } from '@/lib/data/neighborhoods'
 import { getSession } from '@/lib/session'
 import { salesPointSchema } from '@/lib/validators'
 import { z } from 'zod'
@@ -23,8 +24,10 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
+    // Return the raw doc so the edit form can populate cityId/neighborhoodId/
+    // extraLabel directly. (ObjectId/Date serialize to hex/ISO via toJSON.)
     return NextResponse.json(doc)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -37,11 +40,29 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const body = await request.json()
+    if (body && Object.hasOwn(body, 'neighborhoodId') && body.neighborhoodId === '') {
+      body.neighborhoodId = null
+    }
+    if (body && Object.hasOwn(body, 'extraLabel') && body.extraLabel === '') {
+      body.extraLabel = null
+    }
     const data = salesPointSchema.parse(body)
 
-    const districtsById = await getDistrictsById()
-    if (!districtsById.has(data.districtId)) {
-      return NextResponse.json({ error: 'Invalid districtId' }, { status: 400 })
+    const [citiesById, neighborhoodsById] = await Promise.all([
+      getCitiesById(),
+      getNeighborhoodsById(),
+    ])
+    if (!citiesById.has(data.cityId)) {
+      return NextResponse.json({ error: 'Invalid cityId' }, { status: 400 })
+    }
+    if (data.neighborhoodId) {
+      const nb = neighborhoodsById.get(data.neighborhoodId)
+      if (!nb || String(nb.cityId) !== data.cityId) {
+        return NextResponse.json(
+          { error: 'Invalid neighborhoodId for this city' },
+          { status: 400 },
+        )
+      }
     }
 
     const { db } = await connectToDatabase()
@@ -49,8 +70,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const update = {
       $set: {
-        ...data,
-        districtId: new ObjectId(data.districtId),
+        cityId: new ObjectId(data.cityId),
+        neighborhoodId: data.neighborhoodId ? new ObjectId(data.neighborhoodId) : null,
+        extraLabel: data.extraLabel ?? null,
+        googleMapUrl: data.googleMapUrl,
+        vip: data.vip,
+        lat: data.lat,
+        lng: data.lng,
         socialLinks: {
           x: data.socialLinks.x || '',
           facebook: data.socialLinks.facebook || '',
@@ -108,7 +134,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     revalidateTag('places')
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -3,10 +3,12 @@ import { ObjectId } from 'mongodb'
 export interface SalesPoint {
   _id: ObjectId
   legacyId: string | null
-  districtId: ObjectId
-  name: string
-  location: string
-  neighborhood: string | null
+  cityId: ObjectId
+  /** nullable — city-only points (e.g. "نقطة بيع مدينة الباحة") have no neighborhood */
+  neighborhoodId: ObjectId | null
+  /** nullable — non-neighborhood place text (streets / compound tokens), kept
+   *  out of the neighborhoods collection on purpose */
+  extraLabel: string | null
   googleMapUrl: string
   vip: boolean
   lat: number | null
@@ -22,6 +24,28 @@ export interface SalesPoint {
   }
   createdAt: Date
   updatedAt: Date
+  // Legacy free-text fields, kept temporarily on the documents (rename to
+  // _legacy* is deferred per Task 6 until the new code is deployed). Going
+  // forward, new code MUST NOT read these — compose the display name from
+  // city + neighborhood via lib/points.composeDisplayName.
+  name?: string
+  location?: string
+  neighborhood?: string | null
+}
+
+export interface City {
+  _id: ObjectId
+  name: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Neighborhood {
+  _id: ObjectId
+  name: string
+  cityId: ObjectId
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface Settings {
@@ -29,14 +53,6 @@ export interface Settings {
   storeName: string
   storeUrl: string
   storeDescription: string
-}
-
-export interface District {
-  _id: ObjectId
-  /** Arabic label, e.g. 'منطقة الرياض' */
-  name: string
-  createdAt: Date
-  updatedAt: Date
 }
 
 export interface DataJsonItem {

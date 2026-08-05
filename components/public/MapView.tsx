@@ -6,9 +6,10 @@ import 'leaflet/dist/leaflet.css'
 
 interface MapPoint {
   _id: string
-  name: string
-  location: string
-  neighborhood: string | null
+  displayName: string
+  cityName: string
+  neighborhoodName: string | null
+  extraLabel: string | null
   vip: boolean
   googleMapUrl: string
   lat: number | null
@@ -111,8 +112,8 @@ export default function MapView({
       const marker = L.marker([p.lat!, p.lng!], { icon, zIndexOffset: selected ? 1000 : 0 }).addTo(map)
       marker.bindPopup(
         `<div style="font-family:var(--font-body),sans-serif;min-width:160px">
-           <strong style="font-size:13px;color:#0f172a">${escapeHtml(p.name)}</strong>
-           <div style="font-size:12px;color:#64748b;margin-top:2px">${escapeHtml(p.location)}${p.neighborhood ? ` • ${escapeHtml(p.neighborhood)}` : ''}</div>
+           <strong style="font-size:13px;color:#0f172a">${escapeHtml(p.displayName)}</strong>
+           <div style="font-size:12px;color:#64748b;margin-top:2px">${escapeHtml(p.cityName)}${p.neighborhoodName ? ` • حي ${escapeHtml(p.neighborhoodName)}` : p.extraLabel ? ` • ${escapeHtml(p.extraLabel)}` : ''}</div>
            <a href="${p.googleMapUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:${primary}">فتح في خرائط Google ←</a>
          </div>`,
       )

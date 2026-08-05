@@ -7,12 +7,18 @@ export const loginSchema = z.object({
 })
 
 export const salesPointSchema = z.object({
-  districtId: z.string().refine((v) => ObjectId.isValid(v), {
-    message: 'Invalid districtId',
+  cityId: z.string().refine((v) => ObjectId.isValid(v), {
+    message: 'Invalid cityId',
   }),
-  name: z.string().min(1, 'Name is required'),
-  location: z.string().min(1, 'Location is required'),
-  neighborhood: z.string().nullable(),
+  // nullable + optional: '' coerced to null by the route handler before parse.
+  neighborhoodId: z
+    .string()
+    .nullable()
+    .refine((v) => v === null || ObjectId.isValid(v), {
+      message: 'Invalid neighborhoodId',
+    })
+    .optional(),
+  extraLabel: z.string().nullable().optional(),
   googleMapUrl: z.string().url('Invalid Google Maps URL'),
   vip: z.boolean(),
   lat: z.number().nullable(),
@@ -26,10 +32,6 @@ export const salesPointSchema = z.object({
     messenger: z.string(),
     snapchat: z.string(),
   }),
-})
-
-export const districtSchema = z.object({
-  name: z.string().min(1),
 })
 
 export const settingsSchema = z.object({

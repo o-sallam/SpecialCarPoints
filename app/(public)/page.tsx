@@ -1,7 +1,8 @@
-import { getDistrictsById } from '@/lib/data/districts'
 import { getPlaces } from '@/lib/data/places'
+import { getCitiesById } from '@/lib/data/cities'
+import { getNeighborhoodsById } from '@/lib/data/neighborhoods'
 import AccordionLocator from '@/components/public/AccordionLocator'
-import type { POSEntry } from '@/lib/points'
+import { composeDisplayName, type POSEntry } from '@/lib/points'
 
 // Fallback ceiling only. Primary freshness is driven by the "places" data
 // cache tag (busted by revalidateTag('places') on every sales-point write),
@@ -12,19 +13,27 @@ export default async function HomePage() {
   let points: POSEntry[] = []
 
   try {
-    const districtsById = await getDistrictsById()
-    const docs = await getPlaces()
+    const [docs, citiesById, neighborhoodsById] = await Promise.all([
+      getPlaces(),
+      getCitiesById(),
+      getNeighborhoodsById(),
+    ])
 
-    points = docs.map((p) => {
+    points = docs.map((p: any) => {
       const s = p.socialLinks || {}
-      const districtId = p.districtId?.toString() ?? ''
+      const cityName = (p.cityId && citiesById.get(String(p.cityId))?.name) || 'مدن أخرى'
+      const neighborhoodName = p.neighborhoodId
+        ? neighborhoodsById.get(String(p.neighborhoodId))?.name ?? null
+        : null
+      const extraLabel = p.extraLabel ?? null
       return {
         _id: p._id.toString(),
-        districtId,
-        districtName: districtsById.get(districtId)?.name ?? 'مناطق أخرى',
-        name: p.name,
-        location: p.location,
-        neighborhood: p.neighborhood || null,
+        cityId: p.cityId?.toString() ?? '',
+        cityName,
+        neighborhoodId: p.neighborhoodId ? String(p.neighborhoodId) : null,
+        neighborhoodName,
+        extraLabel,
+        displayName: composeDisplayName(cityName, neighborhoodName, extraLabel),
         vip: p.vip,
         googleMapUrl: p.googleMapUrl,
         lat: p.lat ?? null,

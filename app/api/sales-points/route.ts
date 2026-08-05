@@ -3,9 +3,11 @@ import { ObjectId } from 'mongodb'
 import { revalidateTag } from 'next/cache'
 import { connectToDatabase } from '@/lib/mongodb'
 import { getPlaces } from '@/lib/data/places'
-import { getDistrictsById } from '@/lib/data/districts'
+import { getCitiesById } from '@/lib/data/cities'
+import { getNeighborhoodsById } from '@/lib/data/neighborhoods'
 import { getSession } from '@/lib/session'
 import { salesPointSchema } from '@/lib/validators'
+import { composeDisplayName } from '@/lib/points'
 import { z } from 'zod'
 
 export async function GET(request: NextRequest) {
@@ -14,23 +16,51 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q')
     const vip = searchParams.get('vip')
 
-    // Read via the cached path (tag "places"); the dataset is small so the
-    // q/vip filters are applied in memory, preserving the original semantics
-    // (case-insensitive substring on name/location/neighborhood, vip flag).
-    const points = await getPlaces()
+    const [points, citiesById, neighborhoodsById] = await Promise.all([
+      getPlaces(),
+      getCitiesById(),
+      getNeighborhoodsById(),
+    ])
 
-    const filtered = points.filter((p) => {
+    // Resolve each doc to a display shape: city/neighborhood joined and a
+    // composed displayName. Legacy free-text (name/location/neighborhood) is
+    // intentionally NOT returned — the display name is derived, never stored.
+    const resolved = points.map((p: any) => {
+      const cityName = (p.cityId && citiesById.get(String(p.cityId))?.name) || 'مدن أخرى'
+      const neighborhoodName = p.neighborhoodId
+        ? neighborhoodsById.get(String(p.neighborhoodId))?.name ?? null
+        : null
+      const extraLabel = p.extraLabel ?? null
+      return {
+        _id: p._id.toString(),
+        cityId: p.cityId?.toString() ?? '',
+        cityName,
+        neighborhoodId: p.neighborhoodId ? String(p.neighborhoodId) : null,
+        neighborhoodName,
+        extraLabel,
+        displayName: composeDisplayName(cityName, neighborhoodName, extraLabel),
+        vip: p.vip,
+        googleMapUrl: p.googleMapUrl,
+        lat: p.lat ?? null,
+        lng: p.lng ?? null,
+      }
+    })
+
+    const filtered = resolved.filter((p) => {
       if (vip === 'true' && !p.vip) return false
       if (q) {
         const needle = q.toLowerCase()
-        const haystack = [p.name, p.location, p.neighborhood].filter(Boolean).join(' ').toLowerCase()
+        const haystack = [p.displayName, p.cityName, p.neighborhoodName, p.extraLabel]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
         if (!haystack.includes(needle)) return false
       }
       return true
     })
 
     return NextResponse.json(filtered)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -43,18 +73,42 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    // coerce empty-string optionals to null before validation
+    if (body && Object.hasOwn(body, 'neighborhoodId') && body.neighborhoodId === '') {
+      body.neighborhoodId = null
+    }
+    if (body && Object.hasOwn(body, 'extraLabel') && body.extraLabel === '') {
+      body.extraLabel = null
+    }
     const data = salesPointSchema.parse(body)
 
-    const districtsById = await getDistrictsById()
-    if (!districtsById.has(data.districtId)) {
-      return NextResponse.json({ error: 'Invalid districtId' }, { status: 400 })
+    const [citiesById, neighborhoodsById] = await Promise.all([
+      getCitiesById(),
+      getNeighborhoodsById(),
+    ])
+    if (!citiesById.has(data.cityId)) {
+      return NextResponse.json({ error: 'Invalid cityId' }, { status: 400 })
+    }
+    if (data.neighborhoodId) {
+      const nb = neighborhoodsById.get(data.neighborhoodId)
+      if (!nb || String(nb.cityId) !== data.cityId) {
+        return NextResponse.json(
+          { error: 'Invalid neighborhoodId for this city' },
+          { status: 400 },
+        )
+      }
     }
 
     const { db } = await connectToDatabase()
     const now = new Date()
     const doc = {
-      ...data,
-      districtId: new ObjectId(data.districtId),
+      cityId: new ObjectId(data.cityId),
+      neighborhoodId: data.neighborhoodId ? new ObjectId(data.neighborhoodId) : null,
+      extraLabel: data.extraLabel ?? null,
+      googleMapUrl: data.googleMapUrl,
+      vip: data.vip,
+      lat: data.lat,
+      lng: data.lng,
       socialLinks: {
         x: data.socialLinks.x || '',
         facebook: data.socialLinks.facebook || '',
