@@ -36,6 +36,8 @@ export interface SalesPoint {
 export interface City {
   _id: ObjectId
   name: string
+  /** city class used when composing display names: مدينة (default) | محافظة | منطقة */
+  type: 'مدينة' | 'محافظة' | 'منطقة'
   createdAt: Date
   updatedAt: Date
 }

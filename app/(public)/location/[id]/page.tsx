@@ -47,12 +47,14 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
       getCitiesById(),
       getNeighborhoodsById(),
     ])
-    const cityName = (doc.cityId && citiesById.get(String(doc.cityId))?.name) || ''
+    const city = doc.cityId ? citiesById.get(String(doc.cityId)) : null
+    const cityName = city?.name || ''
+    const cityType = city?.type || 'مدينة'
     const neighborhoodName = doc.neighborhoodId
       ? neighborhoodsById.get(String(doc.neighborhoodId))?.name ?? null
       : null
     const extraLabel = doc.extraLabel ?? null
-    const displayName = composeDisplayName(cityName, neighborhoodName, extraLabel)
+    const displayName = composeDisplayName(cityName, cityType, neighborhoodName, extraLabel)
     const locationLine =
       cityName +
       (neighborhoodName ? ` - حي ${neighborhoodName}` : extraLabel ? ` - ${extraLabel}` : '')
@@ -76,12 +78,14 @@ export default async function LocationDetailPage({ params }: { params: { id: str
     getCitiesById(),
     getNeighborhoodsById(),
   ])
-  const cityName = (doc.cityId && citiesById.get(String(doc.cityId))?.name) || 'مدن أخرى'
+  const city = doc.cityId ? citiesById.get(String(doc.cityId)) : null
+  const cityName = city?.name || 'مدن أخرى'
+  const cityType = city?.type || 'مدينة'
   const neighborhoodName = doc.neighborhoodId
     ? neighborhoodsById.get(String(doc.neighborhoodId))?.name ?? null
     : null
   const extraLabel = doc.extraLabel ?? null
-  const displayName = composeDisplayName(cityName, neighborhoodName, extraLabel)
+  const displayName = composeDisplayName(cityName, cityType, neighborhoodName, extraLabel)
 
   const point = {
     _id: doc._id.toString(),

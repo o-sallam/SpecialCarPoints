@@ -21,7 +21,9 @@ export default async function HomePage() {
 
     points = docs.map((p: any) => {
       const s = p.socialLinks || {}
-      const cityName = (p.cityId && citiesById.get(String(p.cityId))?.name) || 'مدن أخرى'
+      const city = p.cityId ? citiesById.get(String(p.cityId)) : null
+      const cityName = city?.name || 'مدن أخرى'
+      const cityType = city?.type || 'مدينة'
       const neighborhoodName = p.neighborhoodId
         ? neighborhoodsById.get(String(p.neighborhoodId))?.name ?? null
         : null
@@ -30,10 +32,11 @@ export default async function HomePage() {
         _id: p._id.toString(),
         cityId: p.cityId?.toString() ?? '',
         cityName,
+        cityType,
         neighborhoodId: p.neighborhoodId ? String(p.neighborhoodId) : null,
         neighborhoodName,
         extraLabel,
-        displayName: composeDisplayName(cityName, neighborhoodName, extraLabel),
+        displayName: composeDisplayName(cityName, cityType, neighborhoodName, extraLabel),
         vip: p.vip,
         googleMapUrl: p.googleMapUrl,
         lat: p.lat ?? null,

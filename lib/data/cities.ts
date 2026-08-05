@@ -20,7 +20,9 @@ export const getCities = unstable_cache(
     return docs as unknown as City[]
   },
   ['cities'],
-  { tags: ['cities'] },
+  // revalidate so a stale/empty entry self-heals on next access instead of
+  // persisting until a manual revalidateTag('cities') / rebuild.
+  { tags: ['cities'], revalidate: 60 },
 )
 
 /** City lookup keyed by `_id.toString()` (hex string). */
@@ -29,18 +31,28 @@ export async function getCitiesById(): Promise<Map<string, City>> {
   return new Map(cities.map((c) => [c._id.toString(), c]))
 }
 
+export type CityType = 'مدينة' | 'محافظة' | 'منطقة'
+
 /** Create a city, then bust the "cities" cache. */
-export async function createCity(input: { name: string }): Promise<City> {
+export async function createCity(input: { name: string; type?: CityType }): Promise<City> {
   const { db } = await connectToDatabase()
   const now = new Date()
-  const doc = { name: input.name.trim(), createdAt: now, updatedAt: now }
+  const doc = {
+    name: input.name.trim(),
+    type: input.type || 'مدينة',
+    createdAt: now,
+    updatedAt: now,
+  }
   const res = await db.collection('cities').insertOne(doc)
   revalidateTag('cities')
   return { _id: res.insertedId, ...doc }
 }
 
 /** Update a city by id. Returns the updated doc, or null if not found. */
-export async function updateCity(id: string, patch: { name?: string }): Promise<City | null> {
+export async function updateCity(
+  id: string,
+  patch: { name?: string; type?: CityType },
+): Promise<City | null> {
   const { db } = await connectToDatabase()
   const set: Record<string, unknown> = { updatedAt: new Date() }
   for (const [k, v] of Object.entries(patch)) {

@@ -13,10 +13,12 @@ export interface POSEntry {
   _id: string
   cityId: string
   cityName: string
+  /** city class (مدينة | محافظة | منطقة) — makes the composed name explicit */
+  cityType: string
   neighborhoodId: string | null
   neighborhoodName: string | null
   extraLabel: string | null
-  /** composed display name, e.g. "نقطة بيع الرياض حي السويدي" (UI-only) */
+  /** composed display name, e.g. "نقطة بيع مدينة الرياض حي السويدي" (UI-only) */
   displayName: string
   vip: boolean
   googleMapUrl: string
@@ -55,14 +57,15 @@ export interface Region {
 
 /**
  * Compose the human-readable sales-point name. UI-only — never persisted.
- *   "نقطة بيع " + city + (" حي " + neighborhood | " " + extraLabel | "")
+ *   "نقطة بيع " + cityType + " " + city + (" حي " + neighborhood | " " + extraLabel | "")
  */
 export function composeDisplayName(
   cityName: string,
+  cityType: string,
   neighborhoodName: string | null,
   extraLabel: string | null,
 ): string {
-  let s = 'نقطة بيع ' + cityName
+  let s = 'نقطة بيع ' + cityType + ' ' + cityName
   if (neighborhoodName) s += ' حي ' + neighborhoodName
   else if (extraLabel) s += ' ' + extraLabel
   return s

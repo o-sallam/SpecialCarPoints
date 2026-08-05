@@ -23,5 +23,5 @@ export const getPlaces = unstable_cache(
     return docs as unknown as Document[]
   },
   ['places'],
-  { tags: ['places'] }
+  { tags: ['places'], revalidate: 60 }
 )

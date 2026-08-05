@@ -17,7 +17,7 @@ export const getNeighborhoods = unstable_cache(
     return docs as unknown as Neighborhood[]
   },
   ['neighborhoods'],
-  { tags: ['neighborhoods'] },
+  { tags: ['neighborhoods'], revalidate: 60 },
 )
 
 /** Neighborhood lookup keyed by `_id.toString()` (hex string). */

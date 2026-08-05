@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
     // composed displayName. Legacy free-text (name/location/neighborhood) is
     // intentionally NOT returned — the display name is derived, never stored.
     const resolved = points.map((p: any) => {
-      const cityName = (p.cityId && citiesById.get(String(p.cityId))?.name) || 'مدن أخرى'
+      const city = p.cityId ? citiesById.get(String(p.cityId)) : null
+      const cityName = city?.name || 'مدن أخرى'
+      const cityType = city?.type || 'مدينة'
       const neighborhoodName = p.neighborhoodId
         ? neighborhoodsById.get(String(p.neighborhoodId))?.name ?? null
         : null
@@ -35,10 +37,11 @@ export async function GET(request: NextRequest) {
         _id: p._id.toString(),
         cityId: p.cityId?.toString() ?? '',
         cityName,
+        cityType,
         neighborhoodId: p.neighborhoodId ? String(p.neighborhoodId) : null,
         neighborhoodName,
         extraLabel,
-        displayName: composeDisplayName(cityName, neighborhoodName, extraLabel),
+        displayName: composeDisplayName(cityName, cityType, neighborhoodName, extraLabel),
         vip: p.vip,
         googleMapUrl: p.googleMapUrl,
         lat: p.lat ?? null,
