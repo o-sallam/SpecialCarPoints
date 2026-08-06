@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CategoryFilters from './CategoryFilters'
 import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
@@ -192,27 +192,70 @@ function ViewToggle({ view, onChange }: { view: View; onChange: (v: View) => voi
       ),
     },
   ]
+
+  const activeIndex = view === 'list' ? 0 : 1
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  // RTL: index 0 sits on the start side (right); cond one index → shift left.
+  const isRtl = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : true
+
+  // Keep keyboard focus on the active tab (roving tabindex).
+  useEffect(() => {
+    tabRefs.current[activeIndex]?.focus()
+  }, [activeIndex])
+
+  function onTabKeyDown(e: React.KeyboardEvent, index: number) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault()
+    let next: number
+    if (e.key === 'Home') next = 0
+    else if (e.key === 'End') next = items.length - 1
+    else if (e.key === 'ArrowRight') next = isRtl ? index - 1 : index + 1
+    else next = isRtl ? index + 1 : index - 1
+    if (next < 0) next = items.length - 1
+    if (next > items.length - 1) next = 0
+    onChange(items[next].id)
+  }
+
   return (
     <div
       role="tablist"
       aria-label="طريقة العرض"
-      className="grid grid-cols-2 gap-1 rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-[var(--color-background)] p-1"
+      className="relative grid w-full grid-cols-2 gap-1 rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-[var(--color-background)] p-1 md:w-auto"
     >
-      {items.map((it) => (
+      {/* sliding active indicator — transform-driven, RTL-aware */}
+      <span
+        aria-hidden
+        className="absolute inset-y-1 start-1 w-[calc(50%-6px)] rounded-[calc(var(--radius-pill)-4px)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-sm)] transition-transform duration-[var(--duration)] ease-[var(--ease)]"
+        style={{
+          transform:
+            activeIndex === 1
+              ? `translateX(${isRtl ? 'calc(-100% - 4px)' : 'calc(100% + 4px)'})`
+              : 'translateX(0)',
+        }}
+      />
+
+      {items.map((item, index) => (
         <button
-          key={it.id}
+          key={item.id}
+          ref={(el) => {
+            tabRefs.current[index] = el
+          }}
+          type="button"
           role="tab"
-          aria-selected={view === it.id}
-          onClick={() => onChange(it.id)}
+          aria-selected={view === item.id}
+          tabIndex={view === item.id ? 0 : -1}
+          onClick={() => onChange(item.id)}
+          onKeyDown={(e) => onTabKeyDown(e, index)}
           className={[
-            'flex items-center justify-center gap-2 rounded-[var(--radius-pill)] py-2 text-sm font-semibold transition-all',
-            view === it.id
-              ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-[var(--shadow-sm)]'
+            'relative z-10 flex min-h-[44px] items-center justify-center gap-2 rounded-[var(--radius-pill)] px-4 py-2 text-sm font-semibold transition-colors duration-[var(--duration)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
+            view === item.id
+              ? 'text-[var(--color-primary)]'
               : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]',
           ].join(' ')}
         >
-          {it.icon}
-          {it.label}
+          {item.icon}
+          {item.label}
         </button>
       ))}
     </div>
