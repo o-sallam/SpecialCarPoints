@@ -6,21 +6,15 @@ import type { Region } from '@/lib/points'
 
 interface Props {
   region: Region
-  /** when true (e.g. while searching) the group opens automatically */
-  defaultOpen?: boolean
   /** distance map (id → km) when geolocation is active */
   distanceOf?: Map<string, number>
   selectedId?: string | null
   onSelect?: (id: string) => void
 }
 
-export default function RegionGroup({ region, defaultOpen = false, distanceOf, selectedId, onSelect }: Props) {
-  const [open, setOpen] = useState(defaultOpen)
-
-  // Follow parent expand-intent (e.g. while searching) without locking the toggle.
-  useEffect(() => {
-    setOpen(defaultOpen)
-  }, [defaultOpen])
+export default function RegionGroup({ region, distanceOf, selectedId, onSelect }: Props) {
+  // All regions start collapsed (auto-expand intent from the old search is gone)
+  const [open, setOpen] = useState(false)
 
   // Auto-expand when one of this region's entries becomes selected (e.g. via map).
   useEffect(() => {
