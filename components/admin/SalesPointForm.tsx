@@ -3,6 +3,17 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
 interface CityLike {
   _id: string
   name: string
@@ -47,6 +58,9 @@ const defaultSocial = {
   messenger: '',
   snapchat: '',
 }
+
+const pill =
+  'rounded-full bg-[var(--color-background)] text-[var(--color-text)] border-[var(--color-border)] focus:ring-[var(--color-primary)]'
 
 export default function SalesPointForm({ initialData, onSubmit, isEditing }: SalesPointFormProps) {
   const router = useRouter()
@@ -97,8 +111,6 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
     setLoading(true)
 
     try {
-      // A point has EITHER a neighborhood OR an extraLabel (or neither) —
-      // never both. extraLabel is for non-neighborhood places (streets etc.).
       const neighborhoodId = form.neighborhoodId || null
       const payload: SalesPointData = {
         ...form,
@@ -129,106 +141,108 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">المدينة</label>
-          <select
-            value={form.cityId}
-            onChange={(e) => update('cityId', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            required
-          >
-            <option value="" disabled>اختر المدينة</option>
-            {cities.map((c) => (
-              <option key={c._id} value={c._id}>{c.name}</option>
-            ))}
-          </select>
+        <div className="space-y-2">
+          <Label>المدينة</Label>
+          <Select value={form.cityId} onValueChange={(v) => update('cityId', v)}>
+            <SelectTrigger className={pill}>
+              <SelectValue placeholder="اختر المدينة" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((c) => (
+                <SelectItem key={c._id} value={c._id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">الحي</label>
-          <select
+        <div className="space-y-2">
+          <Label>الحي</Label>
+          <Select
             value={form.neighborhoodId ?? ''}
-            onChange={(e) => update('neighborhoodId', e.target.value || null)}
+            onValueChange={(v) => update('neighborhoodId', v || null)}
             disabled={!form.cityId}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-50"
           >
-            <option value="">— لا يوجد (مدينة فقط) —</option>
-            {cityNeighborhoods.map((n) => (
-              <option key={n._id} value={n._id}>{n.name}</option>
-            ))}
-          </select>
+            <SelectTrigger className={pill}>
+              <SelectValue placeholder="— لا يوجد (مدينة فقط) —" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">— لا يوجد (مدينة فقط) —</SelectItem>
+              {cityNeighborhoods.map((n) => (
+                <SelectItem key={n._id} value={n._id}>
+                  {n.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        {/* extraLabel: only relevant when no neighborhood is chosen (streets,
-            compound place names, etc.). Deliberately NOT a neighborhoods row. */}
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+        <div className="space-y-2">
+          <Label>
             نص إضافي (شارع / منطقة فرعية)
             {!noNeighborhood && <span className="text-[var(--color-text-muted)]"> — يُستخدم فقط بدون حي</span>}
-          </label>
-          <input
+          </Label>
+          <Input
             type="text"
             value={form.extraLabel ?? ''}
             onChange={(e) => update('extraLabel', e.target.value)}
             disabled={!noNeighborhood}
             placeholder={noNeighborhood ? 'مثال: شارع الاصفر، عريعرة' : ''}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-50"
+            className={pill}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Google Maps URL</label>
-          <input
+        <div className="space-y-2">
+          <Label>Google Maps URL</Label>
+          <Input
             type="url"
             value={form.googleMapUrl}
             onChange={(e) => update('googleMapUrl', e.target.value)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className={pill}
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">خط العرض (Lat)</label>
-          <input
+        <div className="space-y-2">
+          <Label>خط العرض (Lat)</Label>
+          <Input
             type="number"
             step="any"
             value={form.lat ?? ''}
             onChange={(e) => update('lat', e.target.value ? parseFloat(e.target.value) : null)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className={pill}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">خط الطول (Lng)</label>
-          <input
+        <div className="space-y-2">
+          <Label>خط الطول (Lng)</Label>
+          <Input
             type="number"
             step="any"
             value={form.lng ?? ''}
             onChange={(e) => update('lng', e.target.value ? parseFloat(e.target.value) : null)}
-            className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className={pill}
           />
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.vip}
-            onChange={(e) => update('vip', e.target.checked)}
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-primary)] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary)]" />
-          <span className="mr-3 text-sm font-medium text-[var(--color-text)]">VIP</span>
-        </label>
+        <Switch
+          id="vip"
+          checked={form.vip}
+          onCheckedChange={(v) => update('vip', v)}
+          className="data-[state=checked]:bg-[var(--color-primary)]"
+        />
+        <Label htmlFor="vip">VIP</Label>
       </div>
 
       <div>
         <h3 className="text-sm font-medium text-[var(--color-text)] mb-3">روابط التواصل الاجتماعي</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {socialFields.map(({ key, label }) => (
-            <div key={key}>
-              <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{label}</label>
-              <input
+            <div className="space-y-1.5" key={key}>
+              <Label className="text-xs text-[var(--color-text-secondary)]">{label}</Label>
+              <Input
                 type={key === 'email' ? 'email' : 'text'}
                 value={form.socialLinks[key]}
                 onChange={(e) => updateSocial(key, e.target.value)}
-                className="w-full px-4 py-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
+                className={`${pill} text-sm`}
               />
             </div>
           ))}
