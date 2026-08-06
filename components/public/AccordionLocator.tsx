@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CategoryFilters from './CategoryFilters'
 import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
+import Hero from './Hero'
 import GeolocationButton from './GeolocationButton'
 import { haversineKm } from '@/lib/geo'
 import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
@@ -63,6 +64,7 @@ export default function AccordionLocator({ points }: Props) {
   }, [visible, userLocation, distanceOf])
 
   const vipCount = useMemo(() => points.filter((p) => p.vip).length, [points])
+  const allRegionCount = useMemo(() => groupByCity(points).length, [points])
 
   function handleReset() {
     setCategory('all')
@@ -81,23 +83,11 @@ export default function AccordionLocator({ points }: Props) {
 
   return (
     <div>
-      {/* Heading */}
-      <section className="container pt-8">
-        <span className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-primary-soft)] px-3 py-1 text-xs font-bold text-[var(--color-primary)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-          دليل نقاط البيع
-        </span>
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--color-text)] md:text-4xl">
-          تصفّح نقاط البيع حسب المنطقة
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-secondary)] md:text-base">
-          استعرض نقاط بيع Special Car مجمّعة حسب المناطق الإدارية في المملكة. بدّل بين العرض
-          كقائمة أو خريطة، وفلتر حسب النوع، وحدّد موقعك لترتيب الأقرب إليك.
-        </p>
-      </section>
+      {/* Hero — full-bleed, outside the content container; live stat chips */}
+      <Hero totalPoints={points.length} regionCount={allRegionCount} vipCount={vipCount} />
 
       {/* Controls */}
-      <section className="container pt-6">
+      <section className="container pt-8 md:pt-12">
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-sm)] sm:p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {/* filters + locate — horizontally scrollable, never wrapping */}
