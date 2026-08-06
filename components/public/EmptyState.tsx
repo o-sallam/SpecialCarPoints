@@ -1,12 +1,10 @@
 'use client'
 
 interface Props {
-  /** Optional search term to echo back in the message. */
-  query?: string
   onReset?: () => void
 }
 
-export default function EmptyState({ query, onReset }: Props) {
+export default function EmptyState({ onReset }: Props) {
   return (
     <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)] px-6 py-16 text-center animate-pop-in">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-background)] text-[var(--color-text-muted)]">
@@ -18,8 +16,7 @@ export default function EmptyState({ query, onReset }: Props) {
       </div>
       <h3 className="text-lg font-bold text-[var(--color-text)]">لا توجد نقاط مطابقة</h3>
       <p className="mt-1 max-w-sm text-sm text-[var(--color-text-secondary)]">
-        لم نعثر على نقاط بيع{query ? <> تطابق «<span className="font-medium text-[var(--color-text)]">{query}</span>»</> : null} ضمن الفلتر الحالي.
-        جرّب تعديل البحث أو إعادة عرض الكل.
+        لم نعثر على نقاط بيع ضمن الفلتر الحالي. جرّب تعديل الفلتر أو إعادة عرض الكل.
       </p>
       {onReset && (
         <button

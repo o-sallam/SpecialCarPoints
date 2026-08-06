@@ -18,30 +18,14 @@ interface Props {
 type View = 'list' | 'map'
 
 export default function AccordionLocator({ points }: Props) {
-  const [query, setQuery] = useState('')
   const [category, setCategory] = useState<CategoryId>('all')
   const [view, setView] = useState<View>('list')
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [recenterSignal, setRecenterSignal] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const searching = query.trim() !== ''
-
-  // 1) text search
-  const searched = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return points
-    return points.filter(
-      (p) =>
-        p.displayName.toLowerCase().includes(q) ||
-        p.cityName.toLowerCase().includes(q) ||
-        (p.neighborhoodName ? p.neighborhoodName.toLowerCase().includes(q) : false) ||
-        (p.extraLabel ? p.extraLabel.toLowerCase().includes(q) : false),
-    )
-  }, [points, query])
-
-  // 2) category filter (VIP tier)
-  const visible = useMemo(() => filterByCategory(searched, category), [searched, category])
+  // 1) category filter (VIP tier)
+  const visible = useMemo(() => filterByCategory(points, category), [points, category])
 
   // distances from the user (only when located)
   const distanceOf = useMemo(() => {
@@ -78,10 +62,9 @@ export default function AccordionLocator({ points }: Props) {
       .sort((a, b) => minDist(a.entries) - minDist(b.entries))
   }, [visible, userLocation, distanceOf])
 
-  const vipCount = useMemo(() => searched.filter((p) => p.vip).length, [searched])
+  const vipCount = useMemo(() => points.filter((p) => p.vip).length, [points])
 
   function handleReset() {
-    setQuery('')
     setCategory('all')
   }
 
@@ -116,46 +99,21 @@ export default function AccordionLocator({ points }: Props) {
       {/* Controls */}
       <section className="container pt-6">
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-sm)] sm:p-4">
-          <CategoryFilters
-            active={category}
-            total={searched.length}
-            vipCount={vipCount}
-            onChange={setCategory}
-          />
-
-          <div className="relative mt-3">
-            <svg
-              className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-[var(--color-text-muted)]"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="ابحث عن مدينة أو حي أو اسم…"
-              className="w-full rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-[var(--color-background)] py-3 pe-4 ps-12 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                aria-label="مسح البحث"
-                className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {/* View toggle + locate */}
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <ViewToggle view={view} onChange={setView} />
-            <GeolocationButton active={!!userLocation} onLocated={handleLocated} />
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {/* filters + locate — horizontally scrollable, never wrapping */}
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto no-scrollbar">
+              <CategoryFilters
+                active={category}
+                total={points.length}
+                vipCount={vipCount}
+                onChange={setCategory}
+              />
+              <GeolocationButton active={!!userLocation} onLocated={handleLocated} />
+            </div>
+            {/* view toggle — own row on mobile, end-aligned on desktop */}
+            <div className="flex shrink-0 items-center justify-start md:justify-end">
+              <ViewToggle view={view} onChange={setView} />
+            </div>
           </div>
         </div>
 
@@ -165,7 +123,7 @@ export default function AccordionLocator({ points }: Props) {
             <b className="tnum text-[var(--color-text)]">{groups.length}</b> منطقة
             {userLocation && visible.length > 0 ? ' — مرتّبة حسب الأقرب' : ''}
           </span>
-          {(searching || category !== 'all') && (
+          {category !== 'all' && (
             <button
               type="button"
               onClick={handleReset}
@@ -183,7 +141,7 @@ export default function AccordionLocator({ points }: Props) {
       {/* List / Map */}
       <section className="container pb-12 pt-5">
         {visible.length === 0 ? (
-          <EmptyState query={query} onReset={handleReset} />
+          <EmptyState onReset={handleReset} />
         ) : view === 'map' ? (
           <div className="map-isolate h-[70vh] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh]">
             <MapView
@@ -200,7 +158,6 @@ export default function AccordionLocator({ points }: Props) {
               <RegionGroup
                 key={region.id}
                 region={region}
-                defaultOpen={searching}
                 distanceOf={distanceOf}
                 selectedId={selectedId}
                 onSelect={handleSelect}
