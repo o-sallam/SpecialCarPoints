@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
+import { useActiveTheme } from '@/lib/hooks/use-active-theme'
 
 interface MapPoint {
   _id: string
@@ -44,6 +48,8 @@ export default function MapView({
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
   const userMarkerRef = useRef<L.Marker | null>(null)
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null)
+  const tileRef = useRef<L.TileLayer | null>(null)
   const [activated, setActivated] = useState(false)
 
   // --- init / teardown ---
@@ -55,8 +61,6 @@ export default function MapView({
         scrollWheelZoom: false,
         dragging: false,
       }).setView(DEFAULT_CENTER, 6)
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map)
       mapRef.current = map
     }
     return () => {
@@ -66,6 +70,33 @@ export default function MapView({
       }
     }
   }, [])
+
+  const theme = useActiveTheme()
+
+  // --- theme-aware tile layer (dark: CARTO dark_all / light: OSM), swapped live ---
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    if (tileRef.current) {
+      map.removeLayer(tileRef.current)
+      tileRef.current = null
+    }
+
+    const dark = theme === 'dark'
+    const layer = dark
+      ? L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+        })
+      : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors',
+        })
+    layer.addTo(map)
+    tileRef.current = layer
+  }, [theme])
+
 
   function activateMap() {
     if (!activated) setActivated(true)
@@ -83,18 +114,42 @@ export default function MapView({
     }
   }, [activated])
 
-  // --- points markers ---
+  // --- points markers (clustered) ---
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
     const markerMap = markersRef.current
-    markerMap.forEach((m) => map.removeLayer(m))
+    // teardown previous markers — cluster group (and its markers) or plain markers
+    if (clusterRef.current) {
+      map.removeLayer(clusterRef.current)
+      clusterRef.current = null
+    } else {
+      markerMap.forEach((m) => map.removeLayer(m))
+    }
     markerMap.clear()
 
     const valid = points.filter((p) => p.lat != null && p.lng != null)
     const primary = token('--color-primary', '#2563eb')
     const accent = token('--color-accent', '#f59e0b')
+
+    // Build the clustering layer; on init failure fall back to plain markers so
+    // the map never breaks (rollback safety, spec §10 / T6).
+    try {
+      const cg = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        maxClusterRadius: 40,
+        iconCreateFunction: (cluster) => badgeClusterIcon(cluster.getChildCount()),
+      }).addTo(map)
+      clusterRef.current = cg
+    } catch (err) {
+      clusterRef.current = null
+    }
+
+    const addMarker = (marker: L.Marker) => {
+      if (clusterRef.current) clusterRef.current.addLayer(marker)
+      else map.addLayer(marker)
+    }
 
     valid.forEach((p) => {
       const selected = selectedId === p._id
@@ -109,7 +164,8 @@ export default function MapView({
         popupAnchor: [0, -size[1] + 6],
       })
 
-      const marker = L.marker([p.lat!, p.lng!], { icon, zIndexOffset: selected ? 1000 : 0 }).addTo(map)
+      const marker = L.marker([p.lat!, p.lng!], { icon, zIndexOffset: selected ? 1000 : 0 })
+      addMarker(marker)
       marker.bindPopup(
         `<div style="font-family:var(--font-body),sans-serif;min-width:160px">
            <strong style="font-size:13px;color:#0f172a">${escapeHtml(p.displayName)}</strong>
@@ -210,6 +266,21 @@ export default function MapView({
       )}
     </div>
   )
+}
+
+function badgeClusterIcon(count: number): L.DivIcon {
+  // brand-styled circular badge — uses the active theme's primary token
+  const primary = token('--color-primary', '#2563eb')
+  const size = count >= 100 ? 46 : count >= 10 ? 42 : 38
+  const fontSize = size - 20
+  const label = `${count} نقطة بيع في هذه المنطقة`
+  return L.divIcon({
+    className: '',
+    html: `<div role="img" aria-label="${label}" title="${label}"
+      style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:${primary};color:#fff;font-family:var(--font-body),sans-serif;font-weight:700;font-size:${fontSize}px;border:2px solid rgba(255,255,255,0.9);box-shadow:0 4px 12px rgba(0,0,0,0.35)">${count}</div>`,
+    iconSize: L.point(size, size),
+    iconAnchor: L.point(size / 2, size / 2),
+  })
 }
 
 function pinHtml(fill: string, vip: boolean): string {
