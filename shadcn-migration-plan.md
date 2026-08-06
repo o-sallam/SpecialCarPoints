@@ -981,3 +981,1074 @@ git push
 
 ---
 
+## Phase 4: Admin Dashboard Migration
+
+Focus on admin-specific components and features.
+
+### Step 4.1: Install Alert Dialog
+
+```bash
+npx shadcn-ui@latest add alert-dialog
+```
+
+**Purpose:** For ConfirmModal in admin actions.
+
+**Verification:**
+- [ ] File created
+- [ ] No build errors
+
+### Step 4.2: Refactor ConfirmModal
+
+**File:** `components/admin/ConfirmModal.tsx`
+
+**Action:**
+
+Replace custom Modal with AlertDialog:
+
+```typescript
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+
+interface ConfirmModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+}
+
+export default function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+}: ConfirmModalProps) {
+  return (
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{message}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onClose}>{cancelText}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{confirmText}</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+```
+
+**Verification:**
+- [ ] Delete confirmation works
+- [ ] Styling matches design
+- [ ] Keyboard navigation works (ESC to close)
+
+### Step 4.3: Install Tabs Component
+
+```bash
+npx shadcn-ui@latest add tabs
+```
+
+**Purpose:** For potential admin dashboard sections.
+
+**Verification:**
+- [ ] File created
+- [ ] No build errors
+
+### Step 4.4: Optional: Enhance Admin Dashboard with Tabs
+
+**File:** `app/(admin)/admin/page.tsx`
+
+**Action (if applicable):**
+
+Organize admin sections with tabs:
+
+```typescript
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+<Tabs defaultValue="overview">
+  <TabsList>
+    <TabsTrigger value="overview">Overview</TabsTrigger>
+    <TabsTrigger value="sales-points">Sales Points</TabsTrigger>
+    <TabsTrigger value="analytics">Analytics</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview">
+    {/* Dashboard overview */}
+  </TabsContent>
+  <TabsContent value="sales-points">
+    <DataTable data={salesPoints} />
+  </TabsContent>
+  <TabsContent value="analytics">
+    {/* Analytics charts */}
+  </TabsContent>
+</Tabs>
+```
+
+**Note:** Only implement if current design calls for it.
+
+**Verification:**
+- [ ] Tab switching works
+- [ ] Content loads correctly
+- [ ] URL can be synced with tabs (optional)
+
+### Step 4.5: Install Progress Component
+
+```bash
+npx shadcn-ui@latest add progress
+```
+
+**Purpose:** For showing upload/processing progress.
+
+**Verification:**
+- [ ] File created
+- [ ] No build errors
+
+### Step 4.6: Install Toast/Sonner for Notifications
+
+```bash
+npx shadcn-ui@latest add sonner
+```
+
+**Purpose:** Better notifications for admin actions (save, delete, errors).
+
+**Verification:**
+- [ ] Dependencies installed
+- [ ] File created
+- [ ] No build errors
+
+### Step 4.7: Add Toast Provider
+
+**File:** `app/layout.tsx`
+
+**Action:**
+
+Add Toaster to root layout:
+
+```typescript
+import { Toaster } from '@/components/ui/sonner'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ar" dir="rtl">
+      <body>
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  )
+}
+```
+
+**Verification:**
+- [ ] Toaster renders without errors
+- [ ] Position is correct (consider RTL)
+
+### Step 4.8: Replace Alert/Confirm with Toast
+
+**Files:** 
+- `components/admin/SalesPointForm.tsx`
+- `components/admin/DataTable.tsx`
+
+**Action:**
+
+Replace console logs and alert() with toast:
+
+```typescript
+import { toast } from 'sonner'
+
+// Success
+toast.success('Sales point created successfully')
+
+// Error
+toast.error('Failed to create sales point')
+
+// Loading
+const toastId = toast.loading('Saving...')
+// Later
+toast.success('Saved!', { id: toastId })
+
+// Info
+toast.info('Please select a city first')
+```
+
+**Verification:**
+- [ ] Toasts appear for all actions
+- [ ] Success/error states clear
+- [ ] Auto-dismiss works
+- [ ] Accessible (screen reader announces)
+
+### Step 4.9: Phase 4 Complete - Test Admin Dashboard
+
+**Verification checklist:**
+
+- [ ] All admin pages load correctly
+- [ ] CRUD operations work:
+  - [ ] Create new sales point
+  - [ ] Edit existing sales point
+  - [ ] Delete sales point with confirmation
+- [ ] Form validation shows errors
+- [ ] Success/error toasts appear
+- [ ] Data table is functional
+- [ ] All buttons and inputs work
+
+**Commit Phase 4:**
+
+```bash
+git add .
+git commit -m "Phase 4: Migrate admin dashboard components to shadcn/ui"
+git push
+```
+
+---
+
+## Phase 5: Testing & Validation
+
+### Step 5.1: Manual Testing Checklist
+
+**Public Pages:**
+- [ ] Home page (`/`)
+  - [ ] Hero section displays
+  - [ ] FAQ accordion expands/collapses
+  - [ ] CTA buttons work
+  - [ ] Footer links work
+  - [ ] Theme switcher works
+- [ ] Sales Points page (`/sales-points`)
+  - [ ] Map loads correctly
+  - [ ] List view displays entries
+  - [ ] Search filters results
+  - [ ] Category filters work
+  - [ ] Geolocation button works
+  - [ ] Cards display properly
+  - [ ] VIP badges show
+  - [ ] Social links work
+  - [ ] Accordion groups expand/collapse
+- [ ] Mobile responsive
+  - [ ] Test on 375px, 768px, 1024px widths
+  - [ ] Touch interactions work
+  - [ ] No horizontal scroll
+
+**Admin Dashboard:**
+- [ ] Login works
+- [ ] Dashboard stats display
+- [ ] Data table loads
+- [ ] Sorting/filtering works
+- [ ] Create form:
+  - [ ] All inputs work
+  - [ ] Dropdowns populate
+  - [ ] VIP toggle works
+  - [ ] Submit creates entry
+  - [ ] Validation shows errors
+  - [ ] Success toast appears
+- [ ] Edit form:
+  - [ ] Loads existing data
+  - [ ] Updates work
+  - [ ] Success toast appears
+- [ ] Delete:
+  - [ ] Confirmation modal shows
+  - [ ] Cancel works
+  - [ ] Confirm deletes entry
+  - [ ] Success toast appears
+- [ ] Logout works
+
+### Step 5.2: Accessibility Audit
+
+**Tools:** 
+- Browser DevTools Lighthouse
+- axe DevTools
+- Manual keyboard testing
+
+**Checklist:**
+- [ ] All interactive elements keyboard accessible
+- [ ] Focus indicators visible
+- [ ] Proper heading hierarchy
+- [ ] Images have alt text
+- [ ] Form inputs have labels
+- [ ] ARIA attributes correct
+- [ ] Color contrast sufficient (WCAG AA)
+- [ ] Screen reader friendly
+
+**Fix any issues found before proceeding.**
+
+### Step 5.3: Cross-Browser Testing
+
+**Browsers to test:**
+- [ ] Chrome/Edge (latest)
+- [ ] Firefox (latest)
+- [ ] Safari (latest)
+- [ ] Mobile Safari (iOS)
+- [ ] Chrome Mobile (Android)
+
+**Check for:**
+- Layout issues
+- Component rendering
+- Interactions work
+- Performance acceptable
+
+### Step 5.4: Performance Check
+
+**Run Lighthouse audit:**
+
+```bash
+npm run build
+npm start
+# Open http://localhost:3000 in Chrome
+# Run Lighthouse from DevTools
+```
+
+**Target scores:**
+- [ ] Performance: > 90
+- [ ] Accessibility: > 95
+- [ ] Best Practices: > 90
+- [ ] SEO: > 90
+
+**If scores are lower:**
+- Check bundle size
+- Optimize images
+- Check for console errors
+- Review lazy loading
+
+### Step 5.5: Build Size Analysis
+
+```bash
+npm run build
+```
+
+**Check output:**
+- Compare bundle sizes before/after migration
+- Ensure no significant increase (shadcn is tree-shakeable)
+- Check for duplicate dependencies
+
+**Expected:** Similar or slightly smaller bundle (shadcn removes unused code).
+
+### Step 5.6: Visual Regression Testing
+
+**Manual comparison:**
+
+1. Take screenshots of key pages before migration (if available)
+2. Compare with current pages
+3. Document any intentional changes
+
+**Key pages:**
+- Home page
+- Sales points list
+- Admin dashboard
+- Forms
+
+**Ensure:**
+- Spacing consistent
+- Colors match design tokens
+- Typography unchanged (unless intentional)
+- Borders/shadows consistent
+
+### Step 5.7: Documentation Update
+
+**Files to update:**
+
+1. **README.md** - Add shadcn/ui to tech stack
+2. **DESIGN_TOKENS.md** - Document shadcn integration
+3. **package.json** - Version bump (optional)
+
+**Example README update:**
+
+```markdown
+## Tech Stack
+
+- **Framework:** Next.js 14.2
+- **UI Components:** shadcn/ui (Radix UI + Tailwind CSS)
+- **Styling:** Tailwind CSS with custom design tokens
+- **Database:** MongoDB
+- ...
+```
+
+### Step 5.8: Create Migration Summary
+
+**File:** `docs/shadcn-migration-summary.md`
+
+```markdown
+# shadcn/ui Migration Summary
+
+**Date:** 2026-08-06
+**Status:** ✅ Complete
+
+## Changes Made
+
+### Components Migrated
+- Button → shadcn/ui button
+- Input → shadcn/ui input
+- Card → shadcn/ui card
+- Badge → shadcn/ui badge
+- Modal → shadcn/ui dialog
+- Toggle → shadcn/ui switch
+
+### New Components Added
+- Accordion (for FAQ)
+- Select (for form dropdowns)
+- Table (for admin data table)
+- Label (for form accessibility)
+- Tooltip (for helpful hints)
+- Skeleton (for loading states)
+- AlertDialog (for confirmations)
+- Sonner/Toast (for notifications)
+
+### Design Tokens
+- All existing CSS variables preserved
+- shadcn variables mapped to existing tokens
+- No visual changes to end users
+
+### Bundle Size
+- Before: X.X MB
+- After: X.X MB
+- Change: -X% (or +X%)
+
+## Benefits
+- Better accessibility (Radix UI primitives)
+- Consistent component API
+- Better keyboard navigation
+- Improved animations
+- Better mobile support
+- Easier maintenance
+- Official component documentation
+
+## Breaking Changes
+- None (all backward compatible through wrappers)
+
+## Next Steps
+- Remove deprecated files (Phase 6)
+- Add more shadcn components as needed
+- Consider adopting more patterns from shadcn
+```
+
+---
+
+## Phase 6: Cleanup
+
+### Step 6.1: Remove Deprecated Files
+
+**Action:**
+
+Remove all `.deprecated.tsx` files:
+
+```bash
+rm components/ui/Button.deprecated.tsx
+rm components/ui/Input.deprecated.tsx
+rm components/ui/Card.deprecated.tsx
+rm components/ui/Badge.deprecated.tsx
+rm components/ui/Modal.deprecated.tsx
+rm components/ui/Toggle.deprecated.tsx
+```
+
+**Verification:**
+- [ ] Build still succeeds
+- [ ] No import errors
+- [ ] All pages still work
+
+### Step 6.2: Remove Backup Files
+
+```bash
+rm components/ui/*.backup
+rm tailwind.config.ts.backup
+rm app/globals.css.backup
+```
+
+### Step 6.3: Update Import Paths
+
+**Action (optional):**
+
+Convert compatibility wrappers to direct shadcn imports throughout the codebase.
+
+**Example:**
+
+Before:
+```typescript
+import Button from '@/components/ui/Button'
+```
+
+After:
+```typescript
+import { Button } from '@/components/ui/button'
+```
+
+**Note:** Only do this if you want to remove compatibility wrappers. Otherwise, keep them for easier future updates.
+
+**If converting:**
+- Use find-and-replace across project
+- Test thoroughly after each change
+- Commit incrementally
+
+### Step 6.4: Optional: Remove Compatibility Wrappers
+
+**If you converted all imports to direct shadcn:**
+
+```bash
+rm components/ui/Button.tsx
+rm components/ui/Input.tsx
+rm components/ui/Card.tsx
+rm components/ui/Badge.tsx
+rm components/ui/Modal.tsx
+rm components/ui/Toggle.tsx
+```
+
+**Warning:** Only do this after converting ALL imports to lowercase shadcn versions.
+
+### Step 6.5: Clean Up Unused Dependencies
+
+Check if any old dependencies can be removed:
+
+```bash
+npm outdated
+```
+
+**Action:** Update or remove unused packages (be cautious).
+
+### Step 6.6: Final Build and Test
+
+```bash
+npm run build
+npm start
+```
+
+**Full regression test:**
+- [ ] All pages load
+- [ ] All features work
+- [ ] No console errors
+- [ ] No console warnings
+- [ ] Performance acceptable
+- [ ] Bundle size acceptable
+
+### Step 6.7: Final Commit
+
+```bash
+git add .
+git commit -m "Phase 6: Cleanup - remove deprecated files and complete migration"
+git push
+```
+
+### Step 6.8: Create Pull Request
+
+```bash
+# If using GitHub CLI
+gh pr create \
+  --title "Migrate UI components to shadcn/ui" \
+  --body "Completes migration of all custom UI components to shadcn/ui. See shadcn-migration-plan.md for details." \
+  --base main \
+  --head feature/shadcn-migration
+```
+
+**PR Description template:**
+
+```markdown
+## Description
+Migrates all custom UI components to shadcn/ui while maintaining full backward compatibility and existing design tokens.
+
+## Changes
+- ✅ Replaced 6 custom UI primitives with shadcn/ui components
+- ✅ Added 8 new shadcn/ui components for enhanced functionality
+- ✅ Maintained all existing design tokens and styling
+- ✅ Improved accessibility with Radix UI primitives
+- ✅ Added loading states and better user feedback
+- ✅ All tests passing
+
+## Testing
+- [x] Manual testing on all pages
+- [x] Accessibility audit (Lighthouse, axe)
+- [x] Cross-browser testing
+- [x] Mobile responsive testing
+- [x] Build size analysis
+- [x] Performance check
+
+## Screenshots
+[Add before/after screenshots if any visual changes]
+
+## Checklist
+- [x] All phases completed (1-6)
+- [x] Documentation updated
+- [x] No breaking changes
+- [x] Backward compatible
+- [x] Ready for review
+```
+
+### Step 6.9: Merge to Main
+
+**After PR approval:**
+
+```bash
+git checkout main
+git pull origin main
+git merge feature/shadcn-migration
+git push origin main
+```
+
+**Verification:**
+- [ ] Production build succeeds
+- [ ] Production site works
+- [ ] No errors in production logs
+
+---
+
+## Rollback Strategy
+
+If critical issues arise during migration, follow this rollback procedure.
+
+### When to Rollback
+
+**Immediate rollback if:**
+- Production site is broken
+- Critical functionality lost
+- Data corruption occurs
+- Security vulnerability introduced
+
+**Consider rollback if:**
+- Multiple components broken
+- Accessibility severely degraded
+- Performance significantly worse
+- Bundle size increased dramatically (>30%)
+
+### Rollback Procedure
+
+#### Option 1: Revert Git Branch (Recommended)
+
+**If not yet merged to main:**
+
+```bash
+# Switch to main branch
+git checkout main
+
+# Delete feature branch (local and remote)
+git branch -D feature/shadcn-migration
+git push origin --delete feature/shadcn-migration
+
+# Verify main branch works
+npm install
+npm run build
+npm start
+```
+
+**If already merged to main:**
+
+```bash
+# Find the merge commit
+git log --oneline
+
+# Revert the merge (replace MERGE_COMMIT_SHA with actual SHA)
+git revert -m 1 MERGE_COMMIT_SHA
+
+# Push revert
+git push origin main
+```
+
+**Verification:**
+- [ ] Site works on reverted version
+- [ ] No errors
+- [ ] All functionality restored
+
+#### Option 2: Restore Backup Files
+
+**If individual components need rollback:**
+
+```bash
+# Restore backed up files
+cp components/ui/Button.tsx.backup components/ui/Button.tsx
+cp components/ui/Input.tsx.backup components/ui/Input.tsx
+cp components/ui/Card.tsx.backup components/ui/Card.tsx
+cp components/ui/Badge.tsx.backup components/ui/Badge.tsx
+cp components/ui/Modal.tsx.backup components/ui/Modal.tsx
+cp components/ui/Toggle.tsx.backup components/ui/Toggle.tsx
+cp tailwind.config.ts.backup tailwind.config.ts
+cp app/globals.css.backup app/globals.css
+
+# Remove shadcn files
+rm -rf components/ui/button.tsx
+rm -rf components/ui/input.tsx
+# ... etc
+
+# Rebuild
+npm run build
+```
+
+**Verification:**
+- [ ] Build succeeds
+- [ ] All components work
+- [ ] No shadcn imports remain
+
+#### Option 3: Partial Rollback
+
+**If only specific phase needs rollback:**
+
+1. Identify problematic phase commit
+2. Cherry-pick commits to revert specific changes
+3. Test thoroughly
+
+```bash
+# Revert specific commit
+git revert COMMIT_SHA
+
+# Or reset to specific commit (dangerous - only on feature branch)
+git reset --hard COMMIT_SHA
+git push -f origin feature/shadcn-migration
+```
+
+### Post-Rollback Actions
+
+1. **Document what went wrong:**
+   - What broke?
+   - Why did it break?
+   - What was unexpected?
+
+2. **Create issue for investigation:**
+   - Title: "shadcn migration issue: [description]"
+   - Include error logs
+   - Include steps to reproduce
+
+3. **Plan revised approach:**
+   - Address issues found
+   - Consider more gradual migration
+   - Add more testing steps
+
+4. **Notify team:**
+   - Migration rolled back
+   - Reason for rollback
+   - Timeline for retry (if applicable)
+
+---
+
+## Reference
+
+### shadcn/ui Component Mapping
+
+| Custom Component | shadcn Component | Import Path |
+|------------------|------------------|-------------|
+| Button | button | `@/components/ui/button` |
+| Input | input | `@/components/ui/input` |
+| Card | card | `@/components/ui/card` |
+| Badge | badge | `@/components/ui/badge` |
+| Modal | dialog | `@/components/ui/dialog` |
+| Toggle | switch | `@/components/ui/switch` |
+| - | accordion | `@/components/ui/accordion` |
+| - | select | `@/components/ui/select` |
+| - | label | `@/components/ui/label` |
+| - | table | `@/components/ui/table` |
+| - | tooltip | `@/components/ui/tooltip` |
+| - | skeleton | `@/components/ui/skeleton` |
+| - | alert-dialog | `@/components/ui/alert-dialog` |
+| - | tabs | `@/components/ui/tabs` |
+| - | sonner | `@/components/ui/sonner` |
+| - | separator | `@/components/ui/separator` |
+
+### Useful Commands
+
+```bash
+# Install shadcn component
+npx shadcn-ui@latest add [component-name]
+
+# List available components
+npx shadcn-ui@latest add
+
+# Update shadcn components
+npx shadcn-ui@latest diff
+
+# Check current version
+npx shadcn-ui@latest --version
+```
+
+### Design Token Mapping
+
+```css
+/* shadcn variable → Custom variable */
+--background → var(--neutral-0)
+--foreground → var(--neutral-900)
+--primary → var(--color-primary)
+--primary-foreground → var(--neutral-0)
+--secondary → var(--neutral-100)
+--secondary-foreground → var(--neutral-900)
+--muted → var(--neutral-100)
+--muted-foreground → var(--neutral-500)
+--accent → var(--color-accent)
+--accent-foreground → var(--neutral-0)
+--destructive → var(--color-error)
+--destructive-foreground → var(--neutral-0)
+--border → var(--color-border)
+--input → var(--color-border)
+--ring → var(--color-primary)
+--radius → var(--radius-md)
+```
+
+### Component Files Created by shadcn
+
+After full migration, you should have:
+
+```
+components/ui/
+├── accordion.tsx
+├── alert-dialog.tsx
+├── badge.tsx
+├── button.tsx
+├── card.tsx
+├── dialog.tsx
+├── input.tsx
+├── label.tsx
+├── select.tsx
+├── separator.tsx
+├── skeleton.tsx
+├── sonner.tsx
+├── switch.tsx
+├── table.tsx
+├── tabs.tsx
+└── tooltip.tsx
+```
+
+Plus compatibility wrappers (if kept):
+```
+components/ui/
+├── Button.tsx (wrapper)
+├── Input.tsx (wrapper)
+├── Card.tsx (wrapper)
+├── Badge.tsx (wrapper)
+├── Modal.tsx (wrapper)
+└── Toggle.tsx (wrapper)
+```
+
+### Resources
+
+- **shadcn/ui docs:** https://ui.shadcn.com/
+- **Radix UI docs:** https://www.radix-ui.com/
+- **Tailwind CSS docs:** https://tailwindcss.com/
+- **Next.js docs:** https://nextjs.org/docs
+- **Accessibility (WCAG):** https://www.w3.org/WAI/WCAG21/quickref/
+
+### Troubleshooting Common Issues
+
+#### Issue: "Module not found" errors after installing component
+
+**Solution:**
+- Check `components.json` paths are correct
+- Verify `lib/utils.ts` exists
+- Restart dev server: `npm run dev`
+- Clear Next.js cache: `rm -rf .next`
+
+#### Issue: Styling doesn't match design
+
+**Solution:**
+- Check CSS variables in `globals.css`
+- Verify shadcn variables reference custom tokens
+- Check Tailwind config includes component paths
+- Use `cn()` utility for class merging
+
+#### Issue: TypeScript errors
+
+**Solution:**
+- Update `@types/react` and `@types/react-dom`
+- Check tsconfig.json includes component paths
+- Verify imports use correct case (lowercase for shadcn)
+- Run `npm run build` to see detailed errors
+
+#### Issue: Components not tree-shaking
+
+**Solution:**
+- Import named exports: `import { Button } from '@/components/ui/button'`
+- Don't use default exports for shadcn components
+- Check bundler config (Next.js handles this automatically)
+
+#### Issue: Dark mode not working
+
+**Solution:**
+- Verify `darkMode: 'class'` in `tailwind.config.ts`
+- Check dark mode CSS variables in `globals.css`
+- Ensure ThemeSwitcher toggles `dark` class on `<html>`
+
+#### Issue: Animations janky or missing
+
+**Solution:**
+- Check `@keyframes` in `globals.css`
+- Verify Radix UI is installed: `npm list @radix-ui/react-*`
+- Check for CSS conflicts
+- Test in different browser
+
+#### Issue: RTL layout broken
+
+**Solution:**
+- Verify `dir="rtl"` on `<html>` element
+- Check Tailwind RTL support
+- Some shadcn components may need custom RTL styles
+- Test tooltip/popover positioning
+
+---
+
+## Success Criteria
+
+Migration is considered successful when ALL of the following are met:
+
+### Functional Requirements
+- [ ] All pages load without errors
+- [ ] All UI components render correctly
+- [ ] All user interactions work (click, hover, keyboard)
+- [ ] All forms submit and validate
+- [ ] All CRUD operations work in admin
+- [ ] Search and filters work
+- [ ] Map integration works
+- [ ] Geolocation works
+- [ ] Theme switcher works
+- [ ] All links and navigation work
+
+### Technical Requirements
+- [ ] Build succeeds with zero errors
+- [ ] No console errors in browser
+- [ ] No TypeScript errors
+- [ ] All imports resolve correctly
+- [ ] Bundle size acceptable (< 10% increase)
+- [ ] Performance scores maintained (Lighthouse > 90)
+
+### Accessibility Requirements
+- [ ] Lighthouse accessibility score > 95
+- [ ] axe DevTools reports zero violations
+- [ ] All interactive elements keyboard accessible
+- [ ] Screen reader friendly
+- [ ] Focus indicators visible
+- [ ] ARIA attributes correct
+- [ ] Color contrast WCAG AA compliant
+
+### Design Requirements
+- [ ] Visual appearance matches original (or intentional improvements)
+- [ ] Spacing consistent with design tokens
+- [ ] Typography unchanged
+- [ ] Colors match design system
+- [ ] Responsive on all screen sizes
+- [ ] Dark mode works (if implemented)
+- [ ] RTL layout correct (if applicable)
+
+### Documentation Requirements
+- [ ] README updated
+- [ ] DESIGN_TOKENS.md updated (if needed)
+- [ ] Migration summary document created
+- [ ] Code comments added where necessary
+- [ ] PR description complete
+
+### Testing Requirements
+- [ ] Manual testing completed on all pages
+- [ ] Cross-browser testing passed
+- [ ] Mobile testing passed
+- [ ] Accessibility audit passed
+- [ ] Performance audit passed
+- [ ] Visual regression checked
+
+### Cleanup Requirements
+- [ ] Deprecated files removed
+- [ ] Backup files removed
+- [ ] Unused imports removed
+- [ ] Console.log statements removed
+- [ ] TODO comments addressed
+- [ ] Code formatted and linted
+
+---
+
+## Post-Migration Maintenance
+
+### Regular Tasks
+
+**Monthly:**
+- Check for shadcn/ui updates
+- Review component usage for optimization
+- Monitor bundle size
+
+**Quarterly:**
+- Audit accessibility
+- Performance review
+- Design system alignment check
+
+**As Needed:**
+- Add new shadcn components as features require
+- Update custom components to use more shadcn patterns
+- Refactor compatibility wrappers (optional)
+
+### Adding New Components
+
+When adding new UI components in the future:
+
+1. Check if shadcn has the component
+2. If yes: `npx shadcn-ui@latest add [component]`
+3. If no: Create custom component following shadcn patterns
+4. Use design tokens for consistency
+5. Test accessibility
+6. Document in component README
+
+### Updating Components
+
+```bash
+# Check for updates
+npx shadcn-ui@latest diff
+
+# This will show what's changed in shadcn components
+# Review changes carefully before updating
+```
+
+---
+
+## Conclusion
+
+This migration plan provides a comprehensive, step-by-step approach to migrating the SpecialCarPoints UI to shadcn/ui. By following this plan systematically, the cheaper LLM agent should be able to:
+
+1. **Safely migrate** all custom UI components to shadcn/ui
+2. **Maintain functionality** throughout the migration
+3. **Preserve design** tokens and visual consistency
+4. **Improve accessibility** with Radix UI primitives
+5. **Enhance maintainability** with standardized components
+
+### Key Principles
+
+- **Incremental:** One phase at a time
+- **Safe:** Backups and backward compatibility
+- **Tested:** Verify each step before proceeding
+- **Documented:** Record all changes
+- **Reversible:** Clear rollback strategy
+
+### Estimated Timeline
+
+- **Phase 1 (Setup):** 30-60 minutes
+- **Phase 2 (Core):** 2-3 hours
+- **Phase 3 (Complex):** 3-4 hours
+- **Phase 4 (Admin):** 2-3 hours
+- **Phase 5 (Testing):** 2-3 hours
+- **Phase 6 (Cleanup):** 1-2 hours
+
+**Total:** 10-16 hours (depending on complexity and issues encountered)
+
+### Final Checklist
+
+Before considering the migration complete:
+
+- [ ] All phases (1-6) completed successfully
+- [ ] All success criteria met
+- [ ] Documentation updated
+- [ ] PR created and approved
+- [ ] Merged to main branch
+- [ ] Production deployment successful
+- [ ] Post-deployment verification complete
+- [ ] Team notified of completion
+
+---
+
+**Good luck with the migration!** 🚀
+
+If you encounter any issues not covered in this plan, refer to:
+- shadcn/ui documentation
+- Project's existing documentation
+- Git history for context
+- Create detailed issue reports for complex problems
+
+---
+
+*End of Migration Plan*
