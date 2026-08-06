@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { MapPin } from 'lucide-react'
 
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -13,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { LAT_RANGE, LNG_RANGE, ksaWarning } from '@/lib/coordinates'
+
+// Leaflet + the picker stay out of the initial form bundle (FR-021): they load
+// only when the picker opens. ssr:false is mandatory (Leaflet needs window).
+const LocationPickerModal = dynamic(
+  () => import('./location-picker/LocationPickerModal'),
+  { ssr: false },
+)
 
 interface CityLike {
   _id: string
@@ -66,6 +77,9 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [latError, setLatError] = useState('')
+  const [lngError, setLngError] = useState('')
   const [cities, setCities] = useState<CityLike[]>([])
   const [neighborhoods, setNeighborhoods] = useState<NeighborhoodLike[]>([])
   const [form, setForm] = useState<SalesPointData>(
@@ -98,6 +112,40 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  // Client-side range guard (FR-012/FR-017) on the manual lat/lng inputs. The
+  // server is still the source of truth (direct-API bypasses are rejected there).
+  function handleLatChange(v: string) {
+    if (!v.trim()) {
+      update('lat', null)
+      setLatError('')
+      return
+    }
+    const num = parseFloat(v)
+    if (!Number.isFinite(num)) return
+    if (num < LAT_RANGE[0] || num > LAT_RANGE[1]) {
+      setLatError(`خط العرض يجب أن يكون بين ${LAT_RANGE[0]} و ${LAT_RANGE[1]}`)
+      return
+    }
+    setLatError('')
+    update('lat', num)
+  }
+
+  function handleLngChange(v: string) {
+    if (!v.trim()) {
+      update('lng', null)
+      setLngError('')
+      return
+    }
+    const num = parseFloat(v)
+    if (!Number.isFinite(num)) return
+    if (num < LNG_RANGE[0] || num > LNG_RANGE[1]) {
+      setLngError(`خط الطول يجب أن يكون بين ${LNG_RANGE[0]} و ${LNG_RANGE[1]}`)
+      return
+    }
+    setLngError('')
+    update('lng', num)
+  }
+
   function updateSocial(key: string, value: string) {
     setForm((prev) => ({
       ...prev,
@@ -127,6 +175,8 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
 
   const cityNeighborhoods = neighborhoods.filter((n) => n.cityId === form.cityId)
   const noNeighborhood = !form.neighborhoodId
+  const ksaNotice =
+    form.lat != null && form.lng != null ? ksaWarning(form.lat, form.lng) : null
 
   const socialFields = [
     { key: 'x', label: 'X (Twitter)' },
@@ -201,26 +251,68 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
           />
         </div>
         <div className="space-y-2">
-          <Label>خط العرض (Lat)</Label>
+          <Label htmlFor="form-lat">خط العرض (Lat)</Label>
           <Input
+            id="form-lat"
             type="number"
             step="any"
             value={form.lat ?? ''}
-            onChange={(e) => update('lat', e.target.value ? parseFloat(e.target.value) : null)}
+            onChange={(e) => handleLatChange(e.target.value)}
             className={pill}
+            aria-invalid={latError ? true : undefined}
+            aria-describedby={latError ? 'form-lat-error' : undefined}
           />
+          {latError && (
+            <p id="form-lat-error" className="text-xs text-[var(--color-error)]">{latError}</p>
+          )}
         </div>
         <div className="space-y-2">
-          <Label>خط الطول (Lng)</Label>
+          <Label htmlFor="form-lng">خط الطول (Lng)</Label>
           <Input
+            id="form-lng"
             type="number"
             step="any"
             value={form.lng ?? ''}
-            onChange={(e) => update('lng', e.target.value ? parseFloat(e.target.value) : null)}
+            onChange={(e) => handleLngChange(e.target.value)}
             className={pill}
+            aria-invalid={lngError ? true : undefined}
+            aria-describedby={lngError ? 'form-lng-error' : undefined}
           />
+          {lngError && (
+            <p id="form-lng-error" className="text-xs text-[var(--color-error)]">{lngError}</p>
+          )}
         </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setPickerOpen(true)}
+          className="gap-2"
+        >
+          <MapPin className="h-4 w-4" />
+          اختر من الخريطة
+        </Button>
+        {ksaNotice && (
+          <p className="text-sm text-amber-600">⚠ {ksaNotice}</p>
+        )}
+      </div>
+
+      {pickerOpen && (
+        <LocationPickerModal
+          open
+          initialCoords={
+            form.lat != null && form.lng != null ? { lat: form.lat, lng: form.lng } : null
+          }
+          onConfirm={(coords) => {
+            update('lat', coords?.lat ?? null)
+            update('lng', coords?.lng ?? null)
+            setPickerOpen(false)
+          }}
+          onCancel={() => setPickerOpen(false)}
+        />
+      )}
 
       <div className="flex items-center gap-3">
         <Switch
