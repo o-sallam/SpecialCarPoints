@@ -6,21 +6,15 @@ import type { Region } from '@/lib/points'
 
 interface Props {
   region: Region
-  /** when true (e.g. while searching) the group opens automatically */
-  defaultOpen?: boolean
   /** distance map (id → km) when geolocation is active */
   distanceOf?: Map<string, number>
   selectedId?: string | null
   onSelect?: (id: string) => void
 }
 
-export default function RegionGroup({ region, defaultOpen = false, distanceOf, selectedId, onSelect }: Props) {
-  const [open, setOpen] = useState(defaultOpen)
-
-  // Follow parent expand-intent (e.g. while searching) without locking the toggle.
-  useEffect(() => {
-    setOpen(defaultOpen)
-  }, [defaultOpen])
+export default function RegionGroup({ region, distanceOf, selectedId, onSelect }: Props) {
+  // All regions start collapsed (auto-expand intent from the old search is gone)
+  const [open, setOpen] = useState(false)
 
   // Auto-expand when one of this region's entries becomes selected (e.g. via map).
   useEffect(() => {
@@ -35,7 +29,7 @@ export default function RegionGroup({ region, defaultOpen = false, distanceOf, s
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={isOpen}
-        className="flex w-full items-center gap-3 px-4 py-4 text-start transition-colors hover:bg-[var(--color-background)] sm:px-5"
+        className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-4 py-4 text-start transition-all duration-[var(--duration)] ease-[var(--ease)] hover:bg-[var(--color-surface-raised)] hover:border hover:border-[var(--color-primary)]/40 hover:shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] sm:px-5"
       >
         <span
           className={[

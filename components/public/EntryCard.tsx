@@ -30,10 +30,10 @@ export default function EntryCard({ entry, distanceKm, isSelected, onSelect }: P
     <div
       onClick={() => onSelect?.(entry._id)}
       className={[
-        'group flex items-center gap-3 rounded-[var(--radius-md)] border bg-[var(--color-surface)] p-3 transition-all duration-[var(--duration)] sm:p-4',
+        'group flex items-center gap-3 rounded-[var(--radius-md)] border bg-[var(--color-surface)] p-3 transition-all duration-[var(--duration)] ease-[var(--ease)] sm:p-4',
         isSelected
           ? 'border-[var(--color-primary)] ring-1 ring-[var(--color-primary)]'
-          : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-sm)]',
+          : 'border-[var(--color-border)] hover:-translate-y-0.5 hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-surface-raised)] hover:shadow-[var(--shadow-md)]',
         onSelect ? 'cursor-pointer' : '',
       ].join(' ')}
     >
