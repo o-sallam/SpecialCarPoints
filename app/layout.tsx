@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cairo, Tajawal } from 'next/font/google'
 import './globals.css'
+import { Toaster } from '@/components/ui/sonner'
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
@@ -66,7 +67,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body style={{ fontFamily: 'var(--font-body)' }}>{children}</body>
+      <body style={{ fontFamily: 'var(--font-body)' }}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   )
 }

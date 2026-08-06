@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import SalesPointForm, { type SalesPointData } from '@/components/admin/SalesPointForm'
 
 const defaultSocial = {
@@ -49,10 +50,12 @@ export default function EditSalesPointPage() {
     })
 
     if (res.ok) {
+      toast.success('تم تحديث نقطة البيع بنجاح')
       router.push('/admin/sales-points')
       router.refresh()
     } else {
       const err = await res.json()
+      toast.error(err.error || 'تعذر تحديث نقطة البيع')
       throw new Error(err.error || 'Failed to update')
     }
   }

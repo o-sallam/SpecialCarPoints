@@ -1,6 +1,14 @@
 'use client'
 
 import { ReactNode } from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface Column {
   key: string
@@ -21,40 +29,47 @@ export default function DataTable({
   onEdit,
   onDelete,
 }: DataTableProps) {
+  const hasActions = Boolean(onEdit || onDelete)
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]">
+    <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <Table>
+        <TableHeader>
+          <TableRow className="border-[var(--color-border)] hover:bg-transparent">
             {columns.map((col) => (
-              <th key={col.key} className="text-right px-4 py-3 font-medium text-[var(--color-text-secondary)]">
+              <TableHead
+                key={col.key}
+                className="text-right px-4 py-3 font-medium text-[var(--color-text-secondary)]"
+              >
                 {col.label}
-              </th>
+              </TableHead>
             ))}
-            {(onEdit || onDelete) && (
-              <th className="text-right px-4 py-3 font-medium text-[var(--color-text-secondary)]">
+            {hasActions && (
+              <TableHead className="text-right px-4 py-3 font-medium text-[var(--color-text-secondary)]">
                 إجراءات
-              </th>
+              </TableHead>
             )}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {data.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} className="text-center py-12 text-[var(--color-text-secondary)]">
+            <TableRow>
+              <TableCell
+                colSpan={columns.length + (hasActions ? 1 : 0)}
+                className="text-center py-12 text-[var(--color-text-secondary)]"
+              >
                 لا توجد بيانات
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ) : (
             data.map((item, i) => (
-              <tr key={i} className="border-b border-[var(--color-border)] hover:bg-[var(--color-background)]">
+              <TableRow key={i} className="border-[var(--color-border)] hover:bg-[var(--color-background)]">
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-[var(--color-text)]">
+                  <TableCell key={col.key} className="px-4 py-3 text-[var(--color-text)]">
                     {col.render ? col.render(item) : String(item[col.key] ?? '')}
-                  </td>
+                  </TableCell>
                 ))}
-                {(onEdit || onDelete) && (
-                  <td className="px-4 py-3">
+                {hasActions && (
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {onEdit && (
                         <button
@@ -73,13 +88,13 @@ export default function DataTable({
                         </button>
                       )}
                     </div>
-                  </td>
+                  </TableCell>
                 )}
-              </tr>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   )
 }

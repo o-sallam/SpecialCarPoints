@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import DataTable from '@/components/admin/DataTable'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 
@@ -26,9 +27,11 @@ export default function AdminSalesPointsList() {
   async function handleDelete() {
     if (!deleteId) return
     setDeleting(true)
-    await fetch(`/api/sales-points/${deleteId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/sales-points/${deleteId}`, { method: 'DELETE' })
     setDeleting(false)
     setDeleteId(null)
+    if (res.ok) toast.success('تم حذف نقطة البيع')
+    else toast.error('تعذر حذف نقطة البيع')
     fetchData()
   }
 
