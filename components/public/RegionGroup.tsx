@@ -35,7 +35,7 @@ export default function RegionGroup({ region, defaultOpen = false, distanceOf, s
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={isOpen}
-        className="flex w-full items-center gap-3 px-4 py-4 text-start transition-colors hover:bg-[var(--color-background)] sm:px-5"
+        className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-4 py-4 text-start transition-all duration-[var(--duration)] ease-[var(--ease)] hover:bg-[var(--color-surface-raised)] hover:border hover:border-[var(--color-primary)]/40 hover:shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] sm:px-5"
       >
         <span
           className={[

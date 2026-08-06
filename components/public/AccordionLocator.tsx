@@ -117,7 +117,7 @@ export default function AccordionLocator({ points }: Props) {
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] border border-[var(--color-border)] px-2.5 py-1 font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]"
+              className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] border border-[var(--color-border)] px-2.5 py-1 font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
             >
               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                 <path d="M18 6 6 18M6 6l12 12" />
@@ -129,7 +129,7 @@ export default function AccordionLocator({ points }: Props) {
       </section>
 
       {/* List / Map */}
-      <section className="container pb-12 pt-5">
+      <section className="container pt-8 pb-12 md:pt-12">
         {visible.length === 0 ? (
           <EmptyState onReset={handleReset} />
         ) : view === 'map' ? (

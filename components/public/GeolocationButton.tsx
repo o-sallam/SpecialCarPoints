@@ -44,7 +44,7 @@ export default function GeolocationButton({ active, onLocated }: Props) {
       disabled={status === 'loading'}
       aria-pressed={active}
       className={[
-        'inline-flex items-center gap-2 rounded-[var(--radius-pill)] border px-4 py-2.5 text-sm font-medium transition-all duration-[var(--duration)]',
+        'inline-flex items-center gap-2 rounded-[var(--radius-pill)] border px-4 py-2.5 text-sm font-medium transition-all duration-[var(--duration)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
         active
           ? 'border-transparent bg-[var(--color-accent)] text-[var(--neutral-900)] shadow-[var(--shadow-accent)] hover:bg-[var(--color-accent-hover)]'
           : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-[var(--color-border-strong)]',

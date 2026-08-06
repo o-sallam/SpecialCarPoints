@@ -33,7 +33,7 @@ export default function CategoryFilters({ active, total, vipCount, onChange }: P
             aria-selected={selected}
             onClick={() => onChange(cat.id)}
             className={[
-              'group flex shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border px-4 py-2 text-sm font-semibold transition-all duration-[var(--duration)]',
+              'group flex shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border px-4 py-2 text-sm font-semibold transition-all duration-[var(--duration)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
               selected
                 ? 'border-transparent bg-[var(--color-primary)] text-white shadow-[var(--shadow-sm)]'
                 : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]',
