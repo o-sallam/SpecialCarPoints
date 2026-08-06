@@ -36,3 +36,8 @@ next-env.d.ts
 
 # local raw source export — diverges from data.json (the DB-aligned source of truth)
 old_data_source.json
+
+# local agent tooling state
+.kiro/
+.pi/
+.specify/
