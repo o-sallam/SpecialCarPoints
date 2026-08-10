@@ -50,13 +50,14 @@ Region colors (map/list accents) are defined per-region in `lib/geo.ts` (`REGION
 
 ## 2. Typography
 
-**Pairing:** headings **Tajawal** (800), body **Cairo** — both loaded via
-`next/font` in `app/layout.tsx` and exposed as `--font-tajawal` / `--font-cairo`.
+**Pairing:** headings **PingAR LT** (Bold 700), body **PingAR LT** (Regular 400) —
+self-hosted from `fonts/` via `next/font/local` in `app/layout.tsx` and exposed
+as `--font-pingar` (weights 300/400/700).
 
 | Token | Value |
 |---|---|
-| `--font-heading` | `var(--font-tajawal), var(--font-cairo), ui-sans-serif, system-ui, sans-serif` |
-| `--font-body` | `var(--font-cairo), ui-sans-serif, system-ui, sans-serif` |
+| `--font-heading` | `var(--font-pingar), ui-sans-serif, system-ui, sans-serif` |
+| `--font-body` | `var(--font-pingar), ui-sans-serif, system-ui, sans-serif` |
 | `--tracking-tight` | `-0.02em` (applied to all headings via the base layer) |
 
 ### Type scale

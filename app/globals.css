@@ -68,8 +68,8 @@
     --color-success-soft: #f0fdf4;
 
     /* ---- Typography ---- */
-    --font-heading: var(--font-tajawal), var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
-    --font-body: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+    --font-heading: var(--font-pingar), ui-sans-serif, system-ui, sans-serif;
+    --font-body: var(--font-pingar), ui-sans-serif, system-ui, sans-serif;
     --tracking-tight: -0.02em;
     --tracking-wide: 0.06em;
 

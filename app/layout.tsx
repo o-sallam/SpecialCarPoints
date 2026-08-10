@@ -1,18 +1,19 @@
 import type { Metadata } from 'next'
-import { Cairo, Tajawal } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 
-const cairo = Cairo({
-  subsets: ['arabic', 'latin'],
-  variable: '--font-cairo',
-  display: 'swap',
-})
-
-const tajawal = Tajawal({
-  subsets: ['arabic', 'latin'],
-  weight: ['500', '700', '800'],
-  variable: '--font-tajawal',
+// PingAR LT — self-hosted Arabic typeface (Light 300 / Regular 400 / Bold 700).
+// Served through next/font hashed media with font-display: swap; the single
+// --font-pingar variable feeds both --font-body and --font-heading so the
+// whole app (incl. Leaflet popups/cluster badges) picks it up automatically.
+const pingarlt = localFont({
+  src: [
+    { path: '../fonts/PingARLT-Light.otf', weight: '300', style: 'normal' },
+    { path: '../fonts/PingARLT-Regular.otf', weight: '400', style: 'normal' },
+    { path: '../fonts/PingARLT-Bold.otf', weight: '700', style: 'normal' },
+  ],
+  variable: '--font-pingar',
   display: 'swap',
 })
 
@@ -46,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} ${tajawal.variable}`} suppressHydrationWarning>
+    <html lang="ar" dir="rtl" className={pingarlt.variable} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
