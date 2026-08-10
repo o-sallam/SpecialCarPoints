@@ -24,12 +24,18 @@ type View = 'list' | 'map'
 
 type MapMode = 'normal' | 'fullscreen'
 
+type SelectionOrigin = 'map' | 'list' // feature 004 (contract 1)
+
 export default function AccordionLocator({ points }: Props) {
   const [category, setCategory] = useState<CategoryId>('all')
   const [view, setView] = useState<View>('list')
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [recenterSignal, setRecenterSignal] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // Feature 004: how the selection was made — 'map' taps open the bottom
+  // sheet with zero map movement; 'list' taps keep today's flyTo+popup and
+  // never open the sheet (spec A2, data-model.md).
+  const [selectionOrigin, setSelectionOrigin] = useState<SelectionOrigin>('list')
 
   // --- feature 003: map mode (normal | fullscreen) + resize plumbing ---
   // mode is mirrored in a ref so the popstate/back path and idempotent guards
@@ -106,9 +112,13 @@ export default function AccordionLocator({ points }: Props) {
     setCategory('all')
   }
 
-  // clicking a card (or a map marker) selects it and reveals it on the map
-  const handleSelect = useCallback((id: string) => {
+  // clicking a card (or a map marker) selects it and reveals it on the map.
+  // Feature 004: origin distinguishes the two select paths (contract 1) —
+  // list cards pass 'list' (popup+flyTo, no sheet), MapView marker clicks
+  // pass 'map' (sheet, no map movement).
+  const handleSelect = useCallback((id: string, origin: SelectionOrigin = 'list') => {
     setSelectedId((prev) => (prev === id ? null : id))
+    setSelectionOrigin(origin)
     setView('map')
   }, [])
 
@@ -291,17 +301,19 @@ export default function AccordionLocator({ points }: Props) {
               points={visible}
               selectedId={selectedId}
               onSelect={handleSelect}
+              selectionOrigin={selectionOrigin}
               userLocation={userLocation}
               recenterSignal={recenterSignal}
               resizeSignal={resizeSignal}
             />
             </div>
 
-            {/* Detail bottom sheet (feature 004, US1) — sibling of the map
-                wrapper, OUTSIDE .map-isolate (contract 6); Radix portals to
-                body. Interim state: opens for any selection; US2 restricts
-                it to map-origin taps only (spec A2). */}
-            {selectedPoint && (
+            {/* Detail bottom sheet (feature 004) — sibling of the map wrapper,
+                OUTSIDE .map-isolate (contract 6); Radix portals to body.
+                Map-origin only (spec A2): list selects keep popup+flyTo.
+                Derived selectedPoint clears when the point leaves the
+                filtered set (R9, S-12). */}
+            {selectedPoint && selectionOrigin === 'map' && (
               <MapDetailSheet point={selectedPoint} onClose={() => setSelectedId(null)} />
             )}
           </>
@@ -313,7 +325,7 @@ export default function AccordionLocator({ points }: Props) {
                 region={region}
                 distanceOf={distanceOf}
                 selectedId={selectedId}
-                onSelect={handleSelect}
+                onSelect={(id) => handleSelect(id, 'list')}
               />
             ))}
           </div>

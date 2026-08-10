@@ -20,10 +20,16 @@ interface MapPoint {
   lng: number | null
 }
 
+type SelectionOrigin = 'map' | 'list'
+
 interface MapViewProps {
   points: MapPoint[]
   selectedId: string | null
-  onSelect: (id: string) => void
+  /** MODIFIED (feature 004, contract 1): second arg = selection origin —
+   *  marker clicks MUST pass 'map' (never 'list'). */
+  onSelect: (id: string, origin: SelectionOrigin) => void
+  /** NEW — suppresses the flyTo/popup effect for map-origin taps (FR-012). */
+  selectionOrigin?: SelectionOrigin
   userLocation?: { lat: number; lng: number } | null
   recenterSignal?: number
   resizeSignal?: number // NEW — feature 003: bump to invalidate after container resize
@@ -42,6 +48,7 @@ export default function MapView({
   points,
   selectedId,
   onSelect,
+  selectionOrigin = 'list',
   userLocation,
   recenterSignal = 0,
   resizeSignal = 0,
@@ -166,7 +173,13 @@ export default function MapView({
         popupAnchor: [0, -size[1] + 6],
       })
 
-      const marker = L.marker([p.lat!, p.lng!], { icon, zIndexOffset: selected ? 1000 : 0 })
+      const marker = L.marker([p.lat!, p.lng!], {
+        icon,
+        zIndexOffset: selected ? 1000 : 0,
+        // FR-013/FR-014: never bubble clicks up to the cluster group, so a
+        // single individual-marker tap yields exactly one outcome.
+        bubblingMouseEvents: false,
+      })
       addMarker(marker)
       marker.bindPopup(
         `<div style="font-family:var(--font-body),sans-serif;min-width:160px">
@@ -175,7 +188,14 @@ export default function MapView({
            <a href="${p.googleMapUrl}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:${primary}">فتح في خرائط Google ←</a>
          </div>`,
       )
-      marker.on('click', () => onSelect(p._id))
+      marker.on('click', (e) => {
+        // FR-013/FR-014: isolate the individual-marker handler from the
+        // cluster group's zoom-on-click — explicit propagation control, never
+        // visually masked. Exactly one outcome per tap: the sheet (no
+        // zoom/pan/re-cluster via this path — contract 2).
+        L.DomEvent.stopPropagation(e.originalEvent)
+        onSelect(p._id, 'map')
+      })
       markerMap.set(p._id, marker)
     })
 
@@ -210,15 +230,20 @@ export default function MapView({
     }).addTo(map)
   }, [userLocation])
 
-  // --- fly to selected ---
+  // --- fly to selected — LIST-origin only (today's shipped behavior, A2).
+  // Map-origin taps must NOT move the map at all (FR-012, contract 1):
+  // no flyTo, no openPopup, no fitBounds — zoom/center stay bit-identical.
+  // The highlight itself (accent pin + z-offset) is driven by selectedId and
+  // applies for BOTH origins.
   useEffect(() => {
     if (!selectedId || !mapRef.current) return
+    if (selectionOrigin === 'map') return
     const marker = markersRef.current.get(selectedId)
     if (marker) {
       mapRef.current.flyTo(marker.getLatLng(), 14, { duration: 0.8 })
       marker.openPopup()
     }
-  }, [selectedId])
+  }, [selectedId, selectionOrigin])
 
   // --- feature 003: invalidate on wrapper resize (expand/minimize) ---
   // The parent swaps the wrapper's classes (fixed overlay vs in-page card);
