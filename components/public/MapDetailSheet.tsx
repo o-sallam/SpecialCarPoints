@@ -140,7 +140,7 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
         ref={contentRef}
         side="bottom"
         aria-describedby={undefined}
-        className="max-h-[85dvh] overflow-hidden px-5 pb-[calc(var(--space-5)+env(safe-area-inset-bottom))] pt-3"
+        className="flex max-h-[85dvh] flex-col overflow-hidden px-5 pb-[calc(var(--space-5)+env(safe-area-inset-bottom))] pt-3 sm:mx-auto sm:w-full sm:max-w-md"
       >
         {/* Drag surface: grabber + header (touch-action none — the body below
             keeps native pan-y scroll, T016). */}
@@ -168,8 +168,9 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
           </SheetHeader>
         </div>
 
-        {/* Body — location line, then actions (US3). Scans internally. */}
-        <div className="overflow-y-auto pb-1">
+        {/* Body — location line, then actions (US3). Scans internally so the
+            sheet never exceeds the viewport (FR-022, research R10). */}
+        <div className="min-h-0 flex-1 overflow-y-auto pb-1">
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--color-text-secondary)]">
             <span className="truncate">
               {visiblePoint?.cityName}

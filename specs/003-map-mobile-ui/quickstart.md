@@ -31,6 +31,7 @@
 | Q-12 | Screen-reader labels | FR-007, SC-004 | Focus controls with AT / inspect accessibility tree | "تكبير الخريطة" on Expand, "تصغير الخريطة" on Minimize; distinct, meaningful announcements; icon `aria-hidden`; ≥44px hit area |
 | Q-13 | Navigation resets state | FR-015 | Fullscreen → tap a link / navigate away → return | Page loads in normal state (no fullscreen residue, body scroll unlocked, no leftover history entry) |
 | Q-14 | No dead-ends / exit always available | SC-007 | Be fullscreen → rotate → tap Minimize; also back while normal-sized | Every path has an exit; no mode stuck states; console free of errors |
+| Q-15 | Detail sheet over fullscreen map — joint with feature 004 (reserved row) | 004 FR-020 | Run after feature 004 lands (its quickstart S-11): fullscreen → tap an individual marker → Minimize with the detail sheet open | The feature-004 detail bottom sheet opens above the fullscreen map (z 1001 > 1000), stays open and fully interactive over the normal-size map after minimize, and remains dismissible (swipe/backdrop/close/Escape) |
 
 ## Regression checks (must stay green)
 
