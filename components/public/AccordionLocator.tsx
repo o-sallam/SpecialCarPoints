@@ -8,6 +8,7 @@ import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
 import Hero from './Hero'
 import GeolocationButton from './GeolocationButton'
+import MapDetailSheet from './MapDetailSheet'
 import { haversineKm } from '@/lib/geo'
 import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
 import { useIsMobile } from '@/lib/hooks/use-is-mobile'
@@ -50,6 +51,18 @@ export default function AccordionLocator({ points }: Props) {
 
   // 1) category filter (VIP tier)
   const visible = useMemo(() => filterByCategory(points, category), [points, category])
+
+  // selected point derived from the filtered set — a point hidden by the
+  // filter no longer exists, so selection (highlight/popup/sheet) clears
+  // (research R9, quickstart S-12).
+  const selectedPoint = useMemo(
+    () => visible.find((p) => p._id === selectedId) ?? null,
+    [visible, selectedId],
+  )
+
+  useEffect(() => {
+    if (selectedId && !selectedPoint) setSelectedId(null)
+  }, [selectedId, selectedPoint])
 
   // distances from the user (only when located)
   const distanceOf = useMemo(() => {
@@ -222,7 +235,8 @@ export default function AccordionLocator({ points }: Props) {
         {visible.length === 0 ? (
           <EmptyState onReset={handleReset} />
         ) : view === 'map' ? (
-          <div
+          <>
+            <div
             className={
               mapMode === 'fullscreen'
                 ? // NOTE: `isolate` (not .map-isolate) — .map-isolate's position:relative/z-index
@@ -281,7 +295,16 @@ export default function AccordionLocator({ points }: Props) {
               recenterSignal={recenterSignal}
               resizeSignal={resizeSignal}
             />
-          </div>
+            </div>
+
+            {/* Detail bottom sheet (feature 004, US1) — sibling of the map
+                wrapper, OUTSIDE .map-isolate (contract 6); Radix portals to
+                body. Interim state: opens for any selection; US2 restricts
+                it to map-origin taps only (spec A2). */}
+            {selectedPoint && (
+              <MapDetailSheet point={selectedPoint} onClose={() => setSelectedId(null)} />
+            )}
+          </>
         ) : (
           <div className="mx-auto flex max-w-3xl flex-col gap-3">
             {groups.map((region) => (
