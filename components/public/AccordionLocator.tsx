@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import CategoryFilters from './CategoryFilters'
 import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
@@ -9,6 +10,8 @@ import Hero from './Hero'
 import GeolocationButton from './GeolocationButton'
 import { haversineKm } from '@/lib/geo'
 import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
+import { useIsMobile } from '@/lib/hooks/use-is-mobile'
+import { useScrollLock } from '@/lib/hooks/use-scroll-lock'
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false })
 
@@ -18,12 +21,30 @@ interface Props {
 
 type View = 'list' | 'map'
 
+type MapMode = 'normal' | 'fullscreen'
+
 export default function AccordionLocator({ points }: Props) {
   const [category, setCategory] = useState<CategoryId>('all')
   const [view, setView] = useState<View>('list')
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [recenterSignal, setRecenterSignal] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  // --- feature 003: map mode (normal | fullscreen) + resize plumbing ---
+  // mode is mirrored in a ref so the popstate/back path and idempotent guards
+  // always read fresh state without stale closures; capturedScrollY is captured
+  // BEFORE the fullscreen class swap and restored verbatim on minimize (C3.1/3.3).
+  const [mapMode, setMapMode] = useState<MapMode>('normal')
+  const [resizeSignal, setResizeSignal] = useState(0)
+  const mapModeRef = useRef<MapMode>('normal')
+  const capturedScrollYRef = useRef(0)
+  const isMobile = useIsMobile()
+  useScrollLock(mapMode === 'fullscreen') // FR-009: lock background scroll while fullscreen (C3.2)
+
+  const setMode = useCallback((mode: MapMode) => {
+    mapModeRef.current = mode
+    setMapMode(mode)
+  }, [])
 
   // 1) category filter (VIP tier)
   const visible = useMemo(() => filterByCategory(points, category), [points, category])
@@ -81,6 +102,30 @@ export default function AccordionLocator({ points }: Props) {
     setRecenterSignal((n) => n + 1)
   }, [])
 
+  // Expand — mobile-only (FR-012/FR-003): captures scroll before any class
+  // change, bumps the resize signal so the same mounted map invalidates at
+  // fullscreen size (FR-008, C1). Entry gated by useIsMobile (C4.4).
+  const handleExpand = useCallback(() => {
+    if (mapModeRef.current === 'fullscreen' || !isMobile) return
+    capturedScrollYRef.current = window.scrollY // before class swap (C3.1)
+    setResizeSignal((n) => n + 1)
+    setMode('fullscreen')
+  }, [isMobile, setMode])
+
+  // Minimize (until US6/back-gesture integration lands, direct state change):
+  // idempotent guard (C3.6), never clears selectedId / closes popups (C3.8 —
+  // the Leaflet popup, feature 001's detail surface, survives), restores the
+  // captured scroll position AFTER the class swap — deferred to rAF so the
+  // passive body-unlock effect has run (FR-006, C3.3; 'instant', never top).
+  const handleMinimize = useCallback(() => {
+    if (mapModeRef.current !== 'fullscreen') return
+    setResizeSignal((n) => n + 1)
+    setMode('normal')
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: capturedScrollYRef.current, behavior: 'instant' })
+    })
+  }, [setMode])
+
   return (
     <div>
       {/* Hero — full-bleed, outside the content container; live stat chips */}
@@ -133,17 +178,61 @@ export default function AccordionLocator({ points }: Props) {
         {visible.length === 0 ? (
           <EmptyState onReset={handleReset} />
         ) : view === 'map' ? (
-          <div className="map-isolate h-[70vh] overflow-hidden rounded-none border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh] [margin-inline:calc(-1*var(--space-4))] border-x-0 md:rounded-[var(--radius-xl)] md:border-x md:[margin-inline:0]">
-            {/* US1 full-bleed (FR-001): below 768px the card breaks out of the
+          <div
+            className={
+              mapMode === 'fullscreen'
+                ? 'map-isolate fixed inset-0 z-[var(--z-overlay)] overflow-hidden rounded-none border-0'
+                : 'map-isolate h-[70vh] overflow-hidden rounded-none border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh] [margin-inline:calc(-1*var(--space-4))] border-x-0 md:rounded-[var(--radius-xl)] md:border-x md:[margin-inline:0]'
+            }
+          >
+            {/* Wrapper class matrix (contract C2): normal-mobile = full-bleed card;
+                normal-desktop = shipped card exactly; fullscreen = fixed viewport
+                overlay. The mounted MapView is NEVER remounted/ported — size
+                changes are followed by invalidateSize via resizeSignal (R1).
+                US1 full-bleed (FR-001): below 768px the card breaks out of the
                 container padding (`--space-4` = 1rem, logical/RTL-safe negative
                 margin-inline) losing corner radius and side borders; at md: the
                 shipped desktop card is restored exactly (FR-002, contract C2). */}
+            {/* Expand — mobile-only overlay control (FR-003/FR-012); z-[1001]
+                clears MapView's internal z-[1000] activation overlay (R9);
+                stopPropagation keeps the tap from activating the map (C4.5). */}
+            {isMobile && mapMode === 'normal' && (
+              <button
+                type="button"
+                aria-label="تكبير الخريطة"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleExpand()
+                }}
+                className="absolute start-4 top-4 z-[1001] flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-[var(--shadow-md)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
+              >
+                <Maximize2 className="h-5 w-5" aria-hidden />
+              </button>
+            )}
+
+            {/* Minimize — visible at ANY width while fullscreen (FR-005/FR-014,
+                rotation dead-end prevention, C4.4). */}
+            {mapMode === 'fullscreen' && (
+              <button
+                type="button"
+                aria-label="تصغير الخريطة"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleMinimize()
+                }}
+                className="absolute start-4 top-4 z-[1001] flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-[var(--shadow-md)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
+              >
+                <Minimize2 className="h-5 w-5" aria-hidden />
+              </button>
+            )}
+
             <MapView
               points={visible}
               selectedId={selectedId}
               onSelect={handleSelect}
               userLocation={userLocation}
               recenterSignal={recenterSignal}
+              resizeSignal={resizeSignal}
             />
           </div>
         ) : (

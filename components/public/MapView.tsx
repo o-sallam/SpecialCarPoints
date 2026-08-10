@@ -26,6 +26,7 @@ interface MapViewProps {
   onSelect: (id: string) => void
   userLocation?: { lat: number; lng: number } | null
   recenterSignal?: number
+  resizeSignal?: number // NEW — feature 003: bump to invalidate after container resize
 }
 
 const DEFAULT_CENTER: L.LatLngTuple = [24.7136, 46.6753]
@@ -43,6 +44,7 @@ export default function MapView({
   onSelect,
   userLocation,
   recenterSignal = 0,
+  resizeSignal = 0,
 }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
@@ -217,6 +219,19 @@ export default function MapView({
       marker.openPopup()
     }
   }, [selectedId])
+
+  // --- feature 003: invalidate on wrapper resize (expand/minimize) ---
+  // The parent swaps the wrapper's classes (fixed overlay vs in-page card);
+  // window resize does NOT fire, so each bump re-measures the container twice:
+  // immediately + once in rAF after layout settles (plan R2, contract C1).
+  // Guarded to the mounted map; never tears down or rebuilds the instance
+  // (FR-016), and never touches center/zoom, markers, or popups (C1).
+  useEffect(() => {
+    if (resizeSignal === 0) return
+    const invalidate = () => mapRef.current?.invalidateSize()
+    invalidate()
+    requestAnimationFrame(invalidate)
+  }, [resizeSignal])
 
   // --- recenter on user ---
   useEffect(() => {
