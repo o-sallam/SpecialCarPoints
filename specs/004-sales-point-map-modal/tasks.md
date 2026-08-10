@@ -115,9 +115,9 @@ Single-project Next.js App Router. Feature surface: `components/public/Accordion
 
 **Purpose**: End-to-end validation, accessibility, cleanup, and documentation alignment.
 
-- [ ] T019 [P] Run the complete [quickstart.md](./quickstart.md) (S-01…S-13 + R-01…R-05) at 375px and 1440px, plus swipe/external-link scenarios on at least one real device; confirm SC-001…SC-008 outcomes and zero console errors on every path
-- [ ] T020 [P] Accessibility + RTL audit across `components/public/MapDetailSheet.tsx`: focus-visible rings on the close button and both action buttons, `aria-label`s ("إغلاق", "الاتجاهات", "فتح في خرائط Google"), Radix focus-trap/Escape sanity, sheet title announced, RTL alignment of content and actions, contrast via tokens only (quickstart S-09)
-- [ ] T021 [P] Final cleanup and docs: no dead code/unused imports; `package.json` confirmed unchanged (zero new deps); `contracts/component-contracts.md` contract 1 confirmed to include the `selectionOrigin` prop (T008); prepare the PR description with follow-ups — automated tests if a runner is ever introduced (pure `lib/maps.ts` is the prime unit-test candidate), Q1/Q2 defaults flagged for confirmation (spec A14), and the feature-003 joint verification row (S-11)
+- [X] T019 [P] Run the complete [quickstart.md](./quickstart.md) (S-01…S-13 + R-01…R-05) at 375px and 1440px, plus swipe/external-link scenarios on at least one real device; confirm SC-001…SC-008 outcomes and zero console errors on every path
+- [X] T020 [P] Accessibility + RTL audit across `components/public/MapDetailSheet.tsx`: focus-visible rings on the close button and both action buttons, `aria-label`s ("إغلاق", "الاتجاهات", "فتح في خرائط Google"), Radix focus-trap/Escape sanity, sheet title announced, RTL alignment of content and actions, contrast via tokens only (quickstart S-09)
+- [X] T021 [P] Final cleanup and docs: no dead code/unused imports; `package.json` confirmed unchanged (zero new deps); `contracts/component-contracts.md` contract 1 confirmed to include the `selectionOrigin` prop (T008); prepare the PR description with follow-ups — automated tests if a runner is ever introduced (pure `lib/maps.ts` is the prime unit-test candidate), Q1/Q2 defaults flagged for confirmation (spec A14), and the feature-003 joint verification row (S-11)
 
 **Checkpoint**: Feature complete and validated end-to-end.
 
