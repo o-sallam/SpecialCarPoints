@@ -133,7 +133,11 @@ export default function AccordionLocator({ points }: Props) {
         {visible.length === 0 ? (
           <EmptyState onReset={handleReset} />
         ) : view === 'map' ? (
-          <div className="map-isolate h-[70vh] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh]">
+          <div className="map-isolate h-[70vh] overflow-hidden rounded-none border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh] [margin-inline:calc(-1*var(--space-4))] border-x-0 md:rounded-[var(--radius-xl)] md:border-x md:[margin-inline:0]">
+            {/* US1 full-bleed (FR-001): below 768px the card breaks out of the
+                container padding (`--space-4` = 1rem, logical/RTL-safe negative
+                margin-inline) losing corner radius and side borders; at md: the
+                shipped desktop card is restored exactly (FR-002, contract C2). */}
             <MapView
               points={visible}
               selectedId={selectedId}
