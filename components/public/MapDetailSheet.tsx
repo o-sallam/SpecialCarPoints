@@ -49,7 +49,7 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
   const [visiblePoint, setVisiblePoint] = useState<POSEntry | null>(point)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const closeTimerRef = useRef<number | null>(null)
-  const dragRef = useRef({ startY: 0, offset: 0, active: false })
+  const dragRef = useRef({ startY: 0, offset: 0, startT: 0, active: false })
 
   // Open + in-place content swap when the selection changes (FR-008).
   useEffect(() => {
@@ -93,6 +93,7 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
     d.active = true
     d.startY = e.clientY
     d.offset = 0
+    d.startT = e.timeStamp
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     el.style.transition = 'none'
     el.style.willChange = 'transform'
@@ -114,7 +115,8 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
     d.active = false
     el.style.willChange = ''
     const dy = e.clientY - d.startY
-    const flick = dy > 0 && Math.abs(dy / Math.max(1, e.timeStamp)) > FLICK_VELOCITY
+    const dt = e.timeStamp - d.startT
+    const flick = dy > 0 && dt > 0 && dy / dt > FLICK_VELOCITY
     if (dy >= SWIPE_CLOSE_THRESHOLD || flick) {
       el.style.transform = ''
       el.style.transition = ''
@@ -200,6 +202,7 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
                     href={dLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label="الاتجاهات"
                     className="text-[var(--color-text)]"
                   >
                     <Navigation aria-hidden />
@@ -209,7 +212,12 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
               )}
               {gLink && (
                 <Button asChild>
-                  <a href={gLink} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={gLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="فتح في خرائط Google"
+                  >
                     <MapPin aria-hidden />
                     فتح في خرائط Google
                   </a>
