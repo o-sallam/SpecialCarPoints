@@ -38,6 +38,8 @@ export default function AccordionLocator({ points }: Props) {
   const [resizeSignal, setResizeSignal] = useState(0)
   const mapModeRef = useRef<MapMode>('normal')
   const capturedScrollYRef = useRef(0)
+  const historyEntryRef = useRef(false) // a `{ scMap: 'expanded' }` entry is live
+  const pendingBackRef = useRef(false) // history.back() queued, popstate not yet dispatched
   const isMobile = useIsMobile()
   useScrollLock(mapMode === 'fullscreen') // FR-009: lock background scroll while fullscreen (C3.2)
 
@@ -102,29 +104,71 @@ export default function AccordionLocator({ points }: Props) {
     setRecenterSignal((n) => n + 1)
   }, [])
 
-  // Expand — mobile-only (FR-012/FR-003): captures scroll before any class
-  // change, bumps the resize signal so the same mounted map invalidates at
-  // fullscreen size (FR-008, C1). Entry gated by useIsMobile (C4.4).
+  // Expand — mobile-only (FR-012/FR-003): captures scroll BEFORE any class
+  // change, pushes the single back-entry (FR-011, C3.4), bumps the resize
+  // signal so the same mounted map invalidates at fullscreen size (FR-008, C1).
   const handleExpand = useCallback(() => {
     if (mapModeRef.current === 'fullscreen' || !isMobile) return
     capturedScrollYRef.current = window.scrollY // before class swap (C3.1)
     setResizeSignal((n) => n + 1)
+    history.pushState({ scMap: 'expanded' }, '') // exactly one entry per expand
+    historyEntryRef.current = true
     setMode('fullscreen')
   }, [isMobile, setMode])
 
-  // Minimize (until US6/back-gesture integration lands, direct state change):
-  // idempotent guard (C3.6), never clears selectedId / closes popups (C3.8 —
-  // the Leaflet popup, feature 001's detail surface, survives), restores the
-  // captured scroll position AFTER the class swap — deferred to rAF so the
-  // passive body-unlock effect has run (FR-006, C3.3; 'instant', never top).
-  const handleMinimize = useCallback(() => {
-    if (mapModeRef.current !== 'fullscreen') return
+  // Single exit path for BOTH minimize exits (C3.6): the actual state change.
+  // Never calls closePopup / clears selectedId (C3.8 — the open Leaflet popup,
+  // feature 001's detail surface, survives); restores the captured scroll AFTER
+  // the class swap, deferred to rAF so the passive body-unlock effect has run
+  // (FR-006, C3.3; 'instant', never smooth, never top).
+  const exitFullscreen = useCallback(() => {
+    if (mapModeRef.current !== 'fullscreen') return // idempotent (C3.5/3.6)
     setResizeSignal((n) => n + 1)
     setMode('normal')
     requestAnimationFrame(() => {
       window.scrollTo({ top: capturedScrollYRef.current, behavior: 'instant' })
     })
   }, [setMode])
+
+  // US6: back button/gesture minimizes only OUR entry (FR-011, C3.5).
+  // NOTE on mechanics: PopStateEvent.state holds the state of the entry being
+  // traversed TO — a back press away from our pushed entry lands on the base
+  // entry whose state is null, so a literal `event.state?.scMap === 'expanded'`
+  // gate would never fire (verified empirically in Chrome headless; also Next.js
+  // re-decorates pushState state with its `__NA`/internals fields). The plan's
+  // cited fancybox-style pattern closes when the landed entry lacks the marker;
+  // we gate on historyEntryRef (our entry is live = fullscreen with entry), so
+  // any back traversal while fullscreen minimizes, and popstates while normal
+  // (incl. forward into our entry, page restores) are left untouched → a second
+  // back press performs standard navigation. Listener removed on unmount (FR-015).
+  useEffect(() => {
+    const onPopstate = () => {
+      if (historyEntryRef.current) {
+        historyEntryRef.current = false
+        pendingBackRef.current = false
+        exitFullscreen()
+      }
+    }
+    window.addEventListener('popstate', onPopstate)
+    return () => window.removeEventListener('popstate', onPopstate)
+  }, [exitFullscreen])
+
+  // Minimize button — pops the pushed entry via history.back() when present so
+  // button-minimize and back-minimize converge on the same popstate code path
+  // (C3.6); the refs stay set until popstate dispatches so the exit path runs
+  // (pendingBackRef prevents a second back() from stranding history). Direct
+  // fallback keeps the loop working if no entry exists.
+  const handleMinimize = useCallback(() => {
+    if (mapModeRef.current !== 'fullscreen') return
+    if (historyEntryRef.current) {
+      if (!pendingBackRef.current) {
+        pendingBackRef.current = true
+        history.back()
+      }
+    } else {
+      exitFullscreen()
+    }
+  }, [exitFullscreen])
 
   return (
     <div>
@@ -181,8 +225,11 @@ export default function AccordionLocator({ points }: Props) {
           <div
             className={
               mapMode === 'fullscreen'
-                ? 'map-isolate fixed inset-0 z-[var(--z-overlay)] overflow-hidden rounded-none border-0'
-                : 'map-isolate h-[70vh] overflow-hidden rounded-none border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh] [margin-inline:calc(-1*var(--space-4))] border-x-0 md:rounded-[var(--radius-xl)] md:border-x md:[margin-inline:0]'
+                ? // NOTE: `isolate` (not .map-isolate) — .map-isolate's position:relative/z-index
+                  // (custom utility emitted after Tailwind's .fixed/.z-* in the same layer) would
+                  // otherwise override `fixed`/`z-[var(--z-overlay)]` (verified in compiled CSS).
+                  'isolate fixed inset-0 z-[var(--z-overlay)] overflow-hidden rounded-none border-0'
+                : 'isolate relative z-[var(--z-map)] h-[70vh] overflow-hidden rounded-none border border-[var(--color-border)] shadow-[var(--shadow-md)] sm:h-[75vh] [margin-inline:calc(-1*var(--space-4))] border-x-0 md:rounded-[var(--radius-xl)] md:border-x md:[margin-inline:0]'
             }
           >
             {/* Wrapper class matrix (contract C2): normal-mobile = full-bleed card;

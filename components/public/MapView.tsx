@@ -233,6 +233,27 @@ export default function MapView({
     requestAnimationFrame(invalidate)
   }, [resizeSignal])
 
+  // --- feature 003: rAF-throttled window resize listener ---
+  // Device rotation and mobile URL-bar height changes fire window resize but
+  // do NOT change our wrapper's classes; re-measure so tiles re-render with no
+  // blank/gray areas (FR-014, plan R2). Never alters center/zoom or re-triggers
+  // fitBounds; added on mount, removed on unmount.
+  useEffect(() => {
+    let raf = 0
+    const onResize = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        mapRef.current?.invalidateSize()
+      })
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
   // --- recenter on user ---
   useEffect(() => {
     if (!recenterSignal || !userLocation || !mapRef.current) return
