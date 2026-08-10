@@ -114,8 +114,8 @@ export default function AccordionLocator({ points }: Props) {
 
   // clicking a card (or a map marker) selects it and reveals it on the map.
   // Feature 004: origin distinguishes the two select paths (contract 1) —
-  // list cards pass 'list' (popup+flyTo, no sheet), MapView marker clicks
-  // pass 'map' (sheet, no map movement).
+  // list cards pass 'list' (flyTo the point + open the detail sheet),
+  // MapView marker clicks pass 'map' (open the detail sheet, no map movement).
   const handleSelect = useCallback((id: string, origin: SelectionOrigin = 'list') => {
     setSelectedId((prev) => (prev === id ? null : id))
     setSelectionOrigin(origin)
@@ -310,10 +310,11 @@ export default function AccordionLocator({ points }: Props) {
 
             {/* Detail bottom sheet (feature 004) — sibling of the map wrapper,
                 OUTSIDE .map-isolate (contract 6); Radix portals to body.
-                Map-origin only (spec A2): list selects keep popup+flyTo.
-                Derived selectedPoint clears when the point leaves the
-                filtered set (R9, S-12). */}
-            {selectedPoint && selectionOrigin === 'map' && (
+                Opens for BOTH origins: list card taps flyTo the point first
+                (see MapView), map marker taps keep the camera pinned. Derived
+                selectedPoint clears when the point leaves the filtered set
+                (R9, S-12). */}
+            {selectedPoint && (
               <MapDetailSheet point={selectedPoint} onClose={() => setSelectedId(null)} />
             )}
           </>

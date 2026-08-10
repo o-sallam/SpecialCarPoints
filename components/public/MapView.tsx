@@ -199,7 +199,11 @@ export default function MapView({
       markerMap.set(p._id, marker)
     })
 
-    if (valid.length > 0) {
+    // Frame all points only when nothing is selected — a selection lets the
+    // fly-to-selected effect own the camera, so we skip the fitBounds
+    // "collection" flash and go straight to the chosen point (and avoid
+    // re-framing on every marker tap).
+    if (valid.length > 0 && !selectedId) {
       const bounds = L.latLngBounds(valid.map((p) => [p.lat!, p.lng!] as L.LatLngTuple))
       map.fitBounds(bounds, { padding: [60, 60] })
     }
@@ -230,9 +234,10 @@ export default function MapView({
     }).addTo(map)
   }, [userLocation])
 
-  // --- fly to selected — LIST-origin only (today's shipped behavior, A2).
-  // Map-origin taps must NOT move the map at all (FR-012, contract 1):
-  // no flyTo, no openPopup, no fitBounds — zoom/center stay bit-identical.
+  // --- fly to selected — LIST-origin only. Map-origin taps must NOT move the
+  // map at all (FR-012, contract 1): no flyTo, no fitBounds — zoom/center stay
+  // bit-identical. The detail sheet (opened by the parent for both origins)
+  // is the single info surface, so we no longer open the Leaflet popup here.
   // The highlight itself (accent pin + z-offset) is driven by selectedId and
   // applies for BOTH origins.
   useEffect(() => {
@@ -241,7 +246,6 @@ export default function MapView({
     const marker = markersRef.current.get(selectedId)
     if (marker) {
       mapRef.current.flyTo(marker.getLatLng(), 14, { duration: 0.8 })
-      marker.openPopup()
     }
   }, [selectedId, selectionOrigin])
 
