@@ -1,12 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { MapPin, Navigation } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
+import { directionsLink, googleMapsLink } from '@/lib/maps'
 import type { POSEntry } from '@/lib/points'
 
 /*
@@ -126,6 +129,11 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
     }
   }
 
+  // Destinations (FR-015/016/017, contract 4) — resolved from the stored
+  // googleMapUrl first, else coordinates; hidden when neither exists.
+  const gLink = visiblePoint ? googleMapsLink(visiblePoint) : null
+  const dLink = visiblePoint ? directionsLink(visiblePoint) : null
+
   return (
     <Sheet open={open} onOpenChange={(o) => !o && dismiss()}>
       <SheetContent
@@ -178,6 +186,36 @@ export default function MapDetailSheet({ point, onClose }: MapDetailSheetProps) 
               ) : null}
             </span>
           </div>
+
+          {/* Actions (FR-005/006/017, contract 3.3): each button renders only
+              when its destination resolves; both hidden when the point has
+              neither googleMapUrl nor lat/lng — never disabled/dead. External
+              links open safely (FR-018: target=_blank rel=noopener). */}
+          {(dLink || gLink) && (
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {dLink && (
+                <Button asChild variant="outline">
+                  <a
+                    href={dLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-text)]"
+                  >
+                    <Navigation aria-hidden />
+                    الاتجاهات
+                  </a>
+                </Button>
+              )}
+              {gLink && (
+                <Button asChild>
+                  <a href={gLink} target="_blank" rel="noopener noreferrer">
+                    <MapPin aria-hidden />
+                    فتح في خرائط Google
+                  </a>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
