@@ -30,8 +30,18 @@ export default function Header() {
         hidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
-      <div className="container flex items-center justify-between h-16">
-        <Link href="/" aria-label="Special Car — الصفحة الرئيسية" className="flex items-center">
+      <div className="container grid grid-cols-3 items-center h-16">
+        {/* start (right in RTL) — theme toggle */}
+        <div className="flex items-center justify-start">
+          <ThemeSwitcher />
+        </div>
+
+        {/* center — logo, exactly centered */}
+        <Link
+          href="/"
+          aria-label="Special Car — الصفحة الرئيسية"
+          className="flex items-center justify-center justify-self-center"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/special-car-logo.avif"
@@ -45,9 +55,18 @@ export default function Header() {
             className="hidden h-8 w-auto object-contain sm:h-9 dark:block"
           />
         </Link>
-        <nav className="flex items-center gap-4">
-          <ThemeSwitcher />
-        </nav>
+
+        {/* end (left in RTL) — store */}
+        <div className="flex items-center justify-end">
+          <a
+            href="https://specialcarsa.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center rounded-[var(--radius-pill)] bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[var(--color-primary-hover)]"
+          >
+            المتجر
+          </a>
+        </div>
       </div>
     </header>
   )
