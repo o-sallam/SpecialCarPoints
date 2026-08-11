@@ -4,8 +4,9 @@
  * locator.
  *
  * Display strings are GENERATED here from city/neighborhood references and
- * never stored in the database. The literal "نقطة بيع" prefix lives only in
- * composeDisplayName() — it is UI copy, not data.
+ * never stored in the database. Composition may change freely as UI copy —
+ * the "نقطة بيع" prefix was dropped (mobile-friendly, cleaner card titles);
+ * the remaining "مدينة" prefix is also UI copy, not data.
  */
 
 /** A single point-of-sale entry, normalized for the UI. */
@@ -18,7 +19,7 @@ export interface POSEntry {
   neighborhoodId: string | null
   neighborhoodName: string | null
   extraLabel: string | null
-  /** composed display name, e.g. "نقطة بيع مدينة الرياض حي السويدي" (UI-only) */
+  /** composed display name, e.g. "مدينة الرياض حي السويدي" (UI-only) */
   displayName: string
   vip: boolean
   googleMapUrl: string
@@ -58,7 +59,7 @@ export interface Region {
 /**
  * Compose the human-readable sales-point name. UI-only — never persisted.
  * Always prefixes city with "مدينة" regardless of stored city type.
- *   "نقطة بيع مدينة " + city + (" حي " + neighborhood | " " + extraLabel | "")
+ *   "مدينة " + city + (" حي " + neighborhood | " " + extraLabel | "")
  */
 export function composeDisplayName(
   cityName: string,
@@ -66,7 +67,7 @@ export function composeDisplayName(
   neighborhoodName: string | null,
   extraLabel: string | null,
 ): string {
-  let s = 'نقطة بيع مدينة ' + cityName
+  let s = 'مدينة ' + cityName
   if (neighborhoodName) s += ' حي ' + neighborhoodName
   else if (extraLabel) s += ' ' + extraLabel
   return s
