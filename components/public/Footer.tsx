@@ -25,7 +25,7 @@ const FOOTER_LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: 'من نحن', href: '/about' },
   { label: 'نقاط بيع معتمدة', href: `${STORE_URL}/locations` },
   { label: 'تواصل معنا', href: `${STORE_URL}/contact` },
-  { label: 'سياسة الاستبدال والاسترجاع', href: `${STORE_URL}/policies/replacement-and-return` },
+  { label: 'سياسة الاستبدال والاسترجاع', href: 'https://specialcarsa.com/%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%B1%D8%AC%D8%A7%D8%B9-%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%A8%D8%AF%D8%A7%D9%84/page-1134815720' },
   { label: 'الشروط والأحكام', href: `${STORE_URL}/policies/terms` },
   { label: 'سياسة الخصوصية', href: `${STORE_URL}/policies/privacy` },
 ]
