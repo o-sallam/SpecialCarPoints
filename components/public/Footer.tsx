@@ -5,9 +5,9 @@ export default function Footer() {
     <footer className="mt-auto border-t border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="container py-12 md:py-16">
         {/* brand / about + social — columns on desktop, stacked on mobile */}
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
           {/* brand & about */}
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -33,7 +33,7 @@ export default function Footer() {
           </div>
 
           {/* social */}
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <h3 className="text-sm font-bold text-[var(--color-text)]">تابعنا</h3>
             {/* TODO: add real social URLs — safe placeholders rendered for now */}
             <SocialIcons
@@ -49,7 +49,7 @@ export default function Footer() {
         </div>
 
         {/* legal row */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-6 md:flex-row">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-5 md:mt-10 md:pt-6 md:flex-row">
           <p className="text-sm text-[var(--color-text-secondary)]">
             © {new Date().getFullYear()} Special Car. جميع الحقوق محفوظة
           </p>

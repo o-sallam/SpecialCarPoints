@@ -7,9 +7,7 @@ import CategoryFilters from './CategoryFilters'
 import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
 import Hero from './Hero'
-import GeolocationButton from './GeolocationButton'
 import MapDetailSheet from './MapDetailSheet'
-import { haversineKm } from '@/lib/geo'
 import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
 import { useIsMobile } from '@/lib/hooks/use-is-mobile'
 import { useScrollLock } from '@/lib/hooks/use-scroll-lock'
@@ -29,8 +27,6 @@ type SelectionOrigin = 'map' | 'list' // feature 004 (contract 1)
 export default function AccordionLocator({ points }: Props) {
   const [category, setCategory] = useState<CategoryId>('all')
   const [view, setView] = useState<View>('list')
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [recenterSignal, setRecenterSignal] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   // Feature 004: how the selection was made — 'map' taps open the detail
   // sheet with zero map movement; 'list' taps flyTo the point and also open
@@ -74,40 +70,8 @@ export default function AccordionLocator({ points }: Props) {
     if (selectedId && !selectedPoint) setSelectedId(null)
   }, [selectedId, selectedPoint])
 
-  // distances from the user (only when located)
-  const distanceOf = useMemo(() => {
-    const m = new Map<string, number>()
-    if (!userLocation) return m
-    for (const p of points) {
-      if (p.lat == null || p.lng == null) continue
-      m.set(p._id, haversineKm(userLocation, { lat: p.lat, lng: p.lng }))
-    }
-    return m
-  }, [points, userLocation])
-
-  // 3) group by region; when located, sort by nearest region + nearest entry first
-  const groups = useMemo(() => {
-    const base = groupByCity(visible)
-    if (!userLocation) return base
-    const minDist = (entries: POSEntry[]) =>
-      entries.reduce((min, e) => {
-        const d = distanceOf.get(e._id)
-        return d == null ? min : Math.min(min, d)
-      }, Infinity)
-    return base
-      .map((r) => ({
-        ...r,
-        entries: [...r.entries].sort((a, b) => {
-          const da = distanceOf.get(a._id)
-          const db = distanceOf.get(b._id)
-          if (da == null && db == null) return 0
-          if (da == null) return 1
-          if (db == null) return -1
-          return da - db
-        }),
-      }))
-      .sort((a, b) => minDist(a.entries) - minDist(b.entries))
-  }, [visible, userLocation, distanceOf])
+  // group points by city (geolocation / nearest-first sorting was removed)
+  const groups = useMemo(() => groupByCity(visible), [visible])
 
   const vipCount = useMemo(() => points.filter((p) => p.vip).length, [points])
   const allRegionCount = useMemo(() => groupByCity(points).length, [points])
@@ -125,11 +89,6 @@ export default function AccordionLocator({ points }: Props) {
     setSelectionOrigin(origin)
     setView('map')
     if (origin === 'list') setScrollToMapTick((t) => t + 1)
-  }, [])
-
-  const handleLocated = useCallback((coords: { lat: number; lng: number }) => {
-    setUserLocation(coords)
-    setRecenterSignal((n) => n + 1)
   }, [])
 
   // Expand — mobile-only (FR-012/FR-003): captures scroll BEFORE any class
@@ -220,7 +179,7 @@ export default function AccordionLocator({ points }: Props) {
       <section className="container pt-8 md:pt-12">
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-sm)] sm:p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            {/* filters + locate — horizontally scrollable, never wrapping */}
+            {/* filters — horizontally scrollable, never wrapping */}
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto no-scrollbar">
               <CategoryFilters
                 active={category}
@@ -228,7 +187,6 @@ export default function AccordionLocator({ points }: Props) {
                 vipCount={vipCount}
                 onChange={setCategory}
               />
-              <GeolocationButton active={!!userLocation} onLocated={handleLocated} />
             </div>
             {/* view toggle — own row on mobile, end-aligned on desktop */}
             <div className="flex shrink-0 items-center justify-start md:justify-end">
@@ -241,7 +199,6 @@ export default function AccordionLocator({ points }: Props) {
           <span className="tnum">
             <b className="tnum text-[var(--color-text)]">{visible.length}</b> نقطة في{' '}
             <b className="tnum text-[var(--color-text)]">{groups.length}</b> منطقة
-            {userLocation && visible.length > 0 ? ' — مرتّبة حسب الأقرب' : ''}
           </span>
           {category !== 'all' && (
             <button
@@ -321,8 +278,6 @@ export default function AccordionLocator({ points }: Props) {
               selectedId={selectedId}
               onSelect={handleSelect}
               selectionOrigin={selectionOrigin}
-              userLocation={userLocation}
-              recenterSignal={recenterSignal}
               resizeSignal={resizeSignal}
             />
             </div>
@@ -343,7 +298,6 @@ export default function AccordionLocator({ points }: Props) {
               <RegionGroup
                 key={region.id}
                 region={region}
-                distanceOf={distanceOf}
                 selectedId={selectedId}
                 onSelect={(id) => handleSelect(id, 'list')}
               />

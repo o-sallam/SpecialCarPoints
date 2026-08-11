@@ -6,13 +6,11 @@ import type { Region } from '@/lib/points'
 
 interface Props {
   region: Region
-  /** distance map (id → km) when geolocation is active */
-  distanceOf?: Map<string, number>
   selectedId?: string | null
   onSelect?: (id: string) => void
 }
 
-export default function RegionGroup({ region, distanceOf, selectedId, onSelect }: Props) {
+export default function RegionGroup({ region, selectedId, onSelect }: Props) {
   // All regions start collapsed (auto-expand intent from the old search is gone)
   const [open, setOpen] = useState(false)
 
@@ -80,7 +78,6 @@ export default function RegionGroup({ region, distanceOf, selectedId, onSelect }
               <li key={entry._id} className="min-w-0">
                 <EntryCard
                   entry={entry}
-                  distanceKm={distanceOf?.get(entry._id)}
                   isSelected={selectedId === entry._id}
                   onSelect={onSelect}
                 />

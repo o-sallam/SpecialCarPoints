@@ -30,8 +30,6 @@ interface MapViewProps {
   onSelect: (id: string, origin: SelectionOrigin) => void
   /** NEW — suppresses the flyTo/popup effect for map-origin taps (FR-012). */
   selectionOrigin?: SelectionOrigin
-  userLocation?: { lat: number; lng: number } | null
-  recenterSignal?: number
   resizeSignal?: number // NEW — feature 003: bump to invalidate after container resize
 }
 
@@ -49,14 +47,11 @@ export default function MapView({
   selectedId,
   onSelect,
   selectionOrigin = 'list',
-  userLocation,
-  recenterSignal = 0,
   resizeSignal = 0,
 }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
-  const userMarkerRef = useRef<L.Marker | null>(null)
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null)
   const tileRef = useRef<L.TileLayer | null>(null)
   // last `points` array reference — used to tell a real point-set change (mount /
@@ -215,31 +210,6 @@ export default function MapView({
     }
   }, [points, selectedId, onSelect])
 
-  // --- user location marker ---
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-    if (userMarkerRef.current) {
-      map.removeLayer(userMarkerRef.current)
-      userMarkerRef.current = null
-    }
-    if (!userLocation) return
-    const accent = token('--color-accent', '#f59e0b')
-    const icon = L.divIcon({
-      className: '',
-      html: `<div style="position:relative;width:24px;height:24px">
-        <span class="sc-locate-pulse" style="position:absolute;inset:0;border-radius:9999px;background:${accent}"></span>
-        <span style="position:absolute;inset:4px;border-radius:9999px;background:${accent};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)"></span>
-      </div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    })
-    userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
-      icon,
-      zIndexOffset: 2000,
-    }).addTo(map)
-  }, [userLocation])
-
   // --- fly to selected — LIST-origin only. Map-origin taps must NOT move the
   // map at all (FR-012, contract 1): no flyTo, no fitBounds — zoom/center stay
   // bit-identical. The detail sheet (opened by the parent for both origins)
@@ -289,18 +259,6 @@ export default function MapView({
     }
   }, [])
 
-  // --- recenter on user ---
-  useEffect(() => {
-    if (!recenterSignal || !userLocation || !mapRef.current) return
-    mapRef.current.flyTo([userLocation.lat, userLocation.lng], 12, { duration: 0.9 })
-  }, [recenterSignal, userLocation])
-
-  function recenterOnUser() {
-    if (userLocation && mapRef.current) {
-      mapRef.current.flyTo([userLocation.lat, userLocation.lng], 12, { duration: 0.9 })
-    }
-  }
-
   return (
     <div
       className="map-isolate relative h-full w-full"
@@ -308,25 +266,6 @@ export default function MapView({
       onTouchEnd={activateMap}
     >
       <div ref={mapContainerRef} className="absolute inset-0 z-0" />
-
-      {userLocation && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            if (!activated) setActivated(true)
-            recenterOnUser()
-          }}
-          aria-label="إعادة التوسيط على موقعي"
-          className="absolute bottom-5 left-4 z-[700] flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-accent-hover)] shadow-[var(--shadow-md)] transition-transform hover:scale-105"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-            <circle cx="12" cy="12" r="8" />
-          </svg>
-        </button>
-      )}
 
       {!activated && (
         <div className="absolute inset-0 z-[1000] flex items-center justify-center rounded-[var(--radius-lg)] bg-black/5 backdrop-blur-[1px]">

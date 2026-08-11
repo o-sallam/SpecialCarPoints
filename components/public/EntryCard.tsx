@@ -1,12 +1,9 @@
 'use client'
 
 import { toWhatsAppLink, isCallablePhone, type POSEntry } from '@/lib/points'
-import { formatDistance } from '@/lib/geo'
 
 interface Props {
   entry: POSEntry
-  /** distance in km from the user, when geolocation is active */
-  distanceKm?: number | null
   isSelected?: boolean
   onSelect?: (id: string) => void
 }
@@ -16,7 +13,7 @@ interface Props {
  * Action icons are field-driven: each renders only when its data exists
  * (graceful hide), matching the reference behavior for missing phone numbers.
  */
-export default function EntryCard({ entry, distanceKm, isSelected, onSelect }: Props) {
+export default function EntryCard({ entry, isSelected, onSelect }: Props) {
   const phone = (entry.phone ?? '').trim()
   const whatsapp = (entry.whatsapp ?? '').trim()
   const email = (entry.email ?? '').trim()
@@ -60,14 +57,6 @@ export default function EntryCard({ entry, distanceKm, isSelected, onSelect }: P
             {entry.cityName}
             {entry.neighborhoodName ? <span className="text-[var(--color-text-muted)]"> • حي {entry.neighborhoodName}</span> : entry.extraLabel ? <span className="text-[var(--color-text-muted)]"> • {entry.extraLabel}</span> : null}
           </span>
-          {distanceKm != null && (
-            <span className="tnum inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--color-accent-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--color-accent-hover)]">
-              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-              {formatDistance(distanceKm)}
-            </span>
-          )}
         </div>
       </div>
 
