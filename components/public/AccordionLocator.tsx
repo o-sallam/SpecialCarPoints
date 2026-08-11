@@ -8,7 +8,13 @@ import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
 import Hero from './Hero'
 import MapDetailSheet from './MapDetailSheet'
-import { filterByCategory, groupByCity, sortByDirection, type CategoryId, type POSEntry } from '@/lib/points'
+import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
+import {
+  collectionCenter,
+  regionCenter,
+  sortEntries,
+  sortRegions,
+} from '@/lib/utils/sort-by-direction'
 import { useIsMobile } from '@/lib/hooks/use-is-mobile'
 import { useScrollLock } from '@/lib/hooks/use-scroll-lock'
 
@@ -70,12 +76,23 @@ export default function AccordionLocator({ points }: Props) {
     if (selectedId && !selectedPoint) setSelectedId(null)
   }, [selectedId, selectedPoint])
 
-  // group points by city, then order each region's cards by cardinal direction
-  // (شرق → شمال → غرب → جنوب, unmatched last) for the list-view accordions.
-  const groups = useMemo(
-    () => groupByCity(visible).map((r) => ({ ...r, entries: sortByDirection(r.entries) })),
-    [visible],
-  )
+  // group points by city, then order BOTH list levels by geographic bearing
+  // (east → north → west → south, see lib/utils/sort-by-direction.ts):
+  //   level 1 — the accordion regions themselves, relative to the collection
+  //             center (centroid of all region centers);
+  //   level 2 — the cards inside each region, relative to that region's own
+  //             centroid.
+  // Stable: same-bucket / coordinate-less items keep their groupByCity order.
+  // Single render-time place for both levels — not duplicated per component.
+  const groups = useMemo(() => {
+    const base = groupByCity(visible)
+    const center = collectionCenter(base)
+    const orderedRegions = center ? sortRegions(base, center) : base
+    return orderedRegions.map((r) => {
+      const rc = regionCenter(r)
+      return { ...r, entries: rc ? sortEntries(r.entries, rc) : r.entries }
+    })
+  }, [visible])
 
   const vipCount = useMemo(() => points.filter((p) => p.vip).length, [points])
   const allRegionCount = useMemo(() => groupByCity(points).length, [points])
