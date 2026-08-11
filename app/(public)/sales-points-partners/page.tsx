@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
@@ -8,10 +7,6 @@ export const metadata: Metadata = {
   description:
     'منتجات Special Car الآن أقرب لك — أكثر من 20 مدينة وأكثر من 60 نقطة بيع معتمدة حول المملكة. اعثر على أقرب وكيل معتمد.',
 }
-
-// "للوصول الى جميع نقاط البيع اضغط على الرابط في الاسفل" — the store's
-// Linktree aggregates all authorized sales points (with VIP markers).
-const LOCATIONS_URL = 'https://linktr.ee/special.carsa1'
 
 export default function SalesPointsPartnersPage() {
   return (
@@ -40,15 +35,8 @@ export default function SalesPointsPartnersPage() {
       </p>
 
       <Button asChild size="lg" className="shadow-[var(--shadow-md)]">
-        <Link
-          href={LOCATIONS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="فتح جميع نقاط البيع في صفحة الروابط"
-        >
-          <ExternalLink aria-hidden className="h-4 w-4" />
-          جميع نقاط البيع
-        </Link>
+        {/* Internal link: the home page IS the sales-points locator. */}
+        <Link href="/">جميع نقاط البيع</Link>
       </Button>
     </div>
   )
