@@ -32,10 +32,13 @@ export default function AccordionLocator({ points }: Props) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [recenterSignal, setRecenterSignal] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  // Feature 004: how the selection was made — 'map' taps open the bottom
-  // sheet with zero map movement; 'list' taps keep today's flyTo+popup and
-  // never open the sheet (spec A2, data-model.md).
+  // Feature 004: how the selection was made — 'map' taps open the detail
+  // sheet with zero map movement; 'list' taps flyTo the point and also open
+  // the sheet (see handleSelect / MapView).
   const [selectionOrigin, setSelectionOrigin] = useState<SelectionOrigin>('list')
+  // bumped on each list-card tap so an effect can scroll the map to the top
+  // of the viewport on mobile (see the effect before the return).
+  const [scrollToMapTick, setScrollToMapTick] = useState(0)
 
   // --- feature 003: map mode (normal | fullscreen) + resize plumbing ---
   // mode is mirrored in a ref so the popstate/back path and idempotent guards
@@ -47,6 +50,7 @@ export default function AccordionLocator({ points }: Props) {
   const capturedScrollYRef = useRef(0)
   const historyEntryRef = useRef(false) // a `{ scMap: 'expanded' }` entry is live
   const pendingBackRef = useRef(false) // history.back() queued, popstate not yet dispatched
+  const mapWrapperRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
   useScrollLock(mapMode === 'fullscreen') // FR-009: lock background scroll while fullscreen (C3.2)
 
@@ -120,6 +124,7 @@ export default function AccordionLocator({ points }: Props) {
     setSelectedId((prev) => (prev === id ? null : id))
     setSelectionOrigin(origin)
     setView('map')
+    if (origin === 'list') setScrollToMapTick((t) => t + 1)
   }, [])
 
   const handleLocated = useCallback((coords: { lat: number; lng: number }) => {
@@ -193,6 +198,19 @@ export default function AccordionLocator({ points }: Props) {
     }
   }, [exitFullscreen])
 
+  // Pressing a list card enters the map view; on mobile, bring the map to the
+  // top of the viewport so the user lands on the map (flyTo + detail sheet)
+  // rather than the list's previous scroll position. Triggered only by card
+  // taps (origin 'list'), not by the view toggle or map-marker taps. Deferred
+  // one frame so the map wrapper is mounted before we scroll to it.
+  useEffect(() => {
+    if (!scrollToMapTick || !isMobile) return
+    const raf = requestAnimationFrame(() => {
+      mapWrapperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [scrollToMapTick, isMobile])
+
   return (
     <div>
       {/* Hero — full-bleed, outside the content container; live stat chips */}
@@ -247,6 +265,7 @@ export default function AccordionLocator({ points }: Props) {
         ) : view === 'map' ? (
           <>
             <div
+            ref={mapWrapperRef}
             className={
               mapMode === 'fullscreen'
                 ? // NOTE: `isolate` (not .map-isolate) — .map-isolate's position:relative/z-index

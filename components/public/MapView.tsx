@@ -59,6 +59,10 @@ export default function MapView({
   const userMarkerRef = useRef<L.Marker | null>(null)
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null)
   const tileRef = useRef<L.TileLayer | null>(null)
+  // last `points` array reference — used to tell a real point-set change (mount /
+  // filter) apart from a mere selection change, so closing the sheet never
+  // re-fits the map.
+  const prevPointsRef = useRef<MapPoint[] | null>(null)
   const [activated, setActivated] = useState(false)
 
   // --- init / teardown ---
@@ -199,11 +203,13 @@ export default function MapView({
       markerMap.set(p._id, marker)
     })
 
-    // Frame all points only when nothing is selected — a selection lets the
-    // fly-to-selected effect own the camera, so we skip the fitBounds
-    // "collection" flash and go straight to the chosen point (and avoid
-    // re-framing on every marker tap).
-    if (valid.length > 0 && !selectedId) {
+    // Frame all points only when the point SET changes (initial mount or a
+    // filter/category change) and nothing is selected. We deliberately do NOT
+    // re-fit when only the selection changes — so closing the detail sheet or
+    // tapping another marker leaves the current zoom/position untouched.
+    const pointsChanged = prevPointsRef.current !== points
+    prevPointsRef.current = points
+    if (pointsChanged && valid.length > 0 && !selectedId) {
       const bounds = L.latLngBounds(valid.map((p) => [p.lat!, p.lng!] as L.LatLngTuple))
       map.fitBounds(bounds, { padding: [60, 60] })
     }
