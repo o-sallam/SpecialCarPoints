@@ -101,6 +101,37 @@ export function groupByCity(entries: POSEntry[]): Region[] {
     .sort((a, b) => b.entries.length - a.entries.length || a.label.localeCompare(b.label, 'ar'))
 }
 
+/*
+ * Directional ordering for the cards inside a region's accordion. Cards are
+ * sorted by the cardinal keyword found in their label — شرق → شمال → غرب →
+ * جنوب — then any unmatched cards follow in their existing order. The sort is
+ * stable, so multiple cards sharing a direction (or none) keep their relative
+ * input order.
+ */
+const DIRECTION_PRIORITY: { kw: string; rank: number }[] = [
+  { kw: 'شرق', rank: 1 },
+  { kw: 'شمال', rank: 2 },
+  { kw: 'غرب', rank: 3 },
+  { kw: 'جنوب', rank: 4 },
+]
+
+// Finite sentinel (NOT Infinity) so equal-rank subtraction never yields NaN,
+// keeping Array.prototype.sort stable for unmatched / same-direction cards.
+const UNMATCHED_DIRECTION_RANK = DIRECTION_PRIORITY.length + 1
+
+function directionRank(entry: POSEntry): number {
+  const haystack = `${entry.neighborhoodName ?? ''} ${entry.extraLabel ?? ''} ${entry.displayName}`
+  for (const { kw, rank } of DIRECTION_PRIORITY) {
+    if (haystack.includes(kw)) return rank
+  }
+  return UNMATCHED_DIRECTION_RANK
+}
+
+/** Sort entries by cardinal direction; unmatched entries follow unchanged. */
+export function sortByDirection(entries: POSEntry[]): POSEntry[] {
+  return [...entries].sort((a, b) => directionRank(a) - directionRank(b))
+}
+
 /** Build a wa.me deep link from a raw whatsapp value (number or URL). */
 export function toWhatsAppLink(value: string): string {
   const digits = value.replace(/[^0-9]/g, '')

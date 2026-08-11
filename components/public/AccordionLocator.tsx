@@ -8,7 +8,7 @@ import RegionGroup from './RegionGroup'
 import EmptyState from './EmptyState'
 import Hero from './Hero'
 import MapDetailSheet from './MapDetailSheet'
-import { filterByCategory, groupByCity, type CategoryId, type POSEntry } from '@/lib/points'
+import { filterByCategory, groupByCity, sortByDirection, type CategoryId, type POSEntry } from '@/lib/points'
 import { useIsMobile } from '@/lib/hooks/use-is-mobile'
 import { useScrollLock } from '@/lib/hooks/use-scroll-lock'
 
@@ -70,8 +70,12 @@ export default function AccordionLocator({ points }: Props) {
     if (selectedId && !selectedPoint) setSelectedId(null)
   }, [selectedId, selectedPoint])
 
-  // group points by city (geolocation / nearest-first sorting was removed)
-  const groups = useMemo(() => groupByCity(visible), [visible])
+  // group points by city, then order each region's cards by cardinal direction
+  // (شرق → شمال → غرب → جنوب, unmatched last) for the list-view accordions.
+  const groups = useMemo(
+    () => groupByCity(visible).map((r) => ({ ...r, entries: sortByDirection(r.entries) })),
+    [visible],
+  )
 
   const vipCount = useMemo(() => points.filter((p) => p.vip).length, [points])
   const allRegionCount = useMemo(() => groupByCity(points).length, [points])
