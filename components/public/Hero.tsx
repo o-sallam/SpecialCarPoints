@@ -61,19 +61,21 @@ export default function Hero({ totalPoints, regionCount, vipCount }: HeroProps) 
             تصفّح نقاط البيع حسب المنطقة
           </h1>
 
-          {/* live stat cards — always 3-up, even on phones */}
+          {/* live stat cards — always 3-up, even on phones. Dark glass chips
+              (#1a202e @ ~57% — matches the scrim) with no border; white/amber
+              text keeps WCAG-AA over the busy photo in both themes. */}
           <div className="mt-6 flex flex-nowrap items-stretch gap-2 md:mt-8 md:gap-3">
-            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]/95 px-3 py-4 text-center shadow-[var(--shadow-sm)] backdrop-blur-sm md:px-5">
-              <div className="tnum text-2xl font-extrabold leading-none text-[var(--color-primary)]">{totalPoints}</div>
-              <div className="mt-1.5 text-xs font-medium text-[var(--color-text-secondary)]">نقطة بيع</div>
+            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[#1a202e91] px-3 py-4 text-center shadow-[var(--shadow-md)] backdrop-blur-md md:px-5">
+              <div className="tnum text-2xl font-extrabold leading-none text-white">{totalPoints}</div>
+              <div className="mt-1.5 text-xs font-medium text-white/70">نقطة بيع</div>
             </div>
-            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]/95 px-3 py-4 text-center shadow-[var(--shadow-sm)] backdrop-blur-sm md:px-5">
-              <div className="tnum text-2xl font-extrabold leading-none text-[var(--color-primary)]">{regionCount}</div>
-              <div className="mt-1.5 text-xs font-medium text-[var(--color-text-secondary)]">منطقة</div>
+            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[#1a202e91] px-3 py-4 text-center shadow-[var(--shadow-md)] backdrop-blur-md md:px-5">
+              <div className="tnum text-2xl font-extrabold leading-none text-white">{regionCount}</div>
+              <div className="mt-1.5 text-xs font-medium text-white/70">منطقة</div>
             </div>
-            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border border-[var(--color-accent)]/40 bg-[var(--color-accent-soft)]/90 px-3 py-4 text-center shadow-[var(--shadow-sm)] backdrop-blur-sm md:px-5">
-              <div className="tnum text-2xl font-extrabold leading-none text-[var(--color-accent-hover)]">{vipCount}</div>
-              <div className="mt-1.5 text-xs font-bold text-[var(--color-accent-hover)]">نقطة VIP</div>
+            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[#1a202e91] px-3 py-4 text-center shadow-[var(--shadow-md)] backdrop-blur-md md:px-5">
+              <div className="tnum text-2xl font-extrabold leading-none text-[#fcd34d]">{vipCount}</div>
+              <div className="mt-1.5 text-xs font-bold text-[#fcd34d]/90">نقطة VIP</div>
             </div>
           </div>
         </div>
