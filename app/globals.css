@@ -66,6 +66,8 @@
     --color-error-soft: #fef2f2;
     --color-success: #16a34a;
     --color-success-soft: #f0fdf4;
+    /* hero stat cards — translucent gray pane over the hero photo (feature req) */
+    --color-hero-card: #85858591;
 
     /* ---- Typography ---- */
     --font-heading: var(--font-pingar), ui-sans-serif, system-ui, sans-serif;
@@ -182,6 +184,7 @@
     --color-error-soft: rgba(220, 38, 38, 0.14);
     --color-success: #4ade80;
     --color-success-soft: rgba(22, 163, 74, 0.14);
+    --color-hero-card: #1a202e91;
 
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.5);

@@ -61,19 +61,20 @@ export default function Hero({ totalPoints, regionCount, vipCount }: HeroProps) 
             تصفّح نقاط البيع حسب المنطقة
           </h1>
 
-          {/* live stat cards — always 3-up, even on phones. Dark glass chips
-              (#1a202e @ ~57% — matches the scrim) with no border and no blur;
-              white/amber text keeps WCAG-AA over the busy photo in both themes. */}
+          {/* live stat cards — always 3-up, even on phones. Translucent panes,
+              no border, no blur: --color-hero-card (gray-lite #85858591 /
+              navy-dark #1a202e91). White/amber text keeps WCAG-AA over the
+              busy photo in both themes. */}
           <div className="mt-6 flex flex-nowrap items-stretch gap-2 md:mt-8 md:gap-3">
-            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[#1a202e91] px-3 py-4 text-center shadow-[var(--shadow-md)] md:px-5">
+            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[var(--color-hero-card)] px-3 py-4 text-center shadow-[var(--shadow-md)] md:px-5">
               <div className="tnum text-2xl font-extrabold leading-none text-white">{totalPoints}</div>
               <div className="mt-1.5 text-xs font-medium text-white/70">نقطة بيع</div>
             </div>
-            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[#1a202e91] px-3 py-4 text-center shadow-[var(--shadow-md)] md:px-5">
+            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[var(--color-hero-card)] px-3 py-4 text-center shadow-[var(--shadow-md)] md:px-5">
               <div className="tnum text-2xl font-extrabold leading-none text-white">{regionCount}</div>
               <div className="mt-1.5 text-xs font-medium text-white/70">منطقة</div>
             </div>
-            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[#1a202e91] px-3 py-4 text-center shadow-[var(--shadow-md)] md:px-5">
+            <div className="flex-1 min-w-0 rounded-[var(--radius-lg)] border-0 bg-[var(--color-hero-card)] px-3 py-4 text-center shadow-[var(--shadow-md)] md:px-5">
               <div className="tnum text-2xl font-extrabold leading-none text-[#fcd34d]">{vipCount}</div>
               <div className="mt-1.5 text-xs font-bold text-[#fcd34d]/90">نقطة VIP</div>
             </div>
