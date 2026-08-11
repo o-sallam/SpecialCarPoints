@@ -23,7 +23,9 @@ const SBC_LINK =
 const FOOTER_LINKS: { label: string; href: string; external?: boolean }[] = [
   // Feature: About page now lives in-app at /about (was the store's page slug).
   { label: 'من نحن', href: '/about' },
-  { label: 'نقاط بيع معتمدة', href: 'https://specialcarsa.com/%D9%86%D9%82%D8%A7%D8%B7-%D8%A8%D9%8A%D8%B9-%D9%84%D9%84%D9%85%D9%86%D8%AA%D8%AC%D8%A7%D8%AA-%D8%B3%D8%A8%D9%8A%D8%B4%D9%84-%D9%83%D8%A7%D8%B1/page-1685454324' },
+  // Feature: points-of-sale landing now in-app at /sales-points-partners
+  // (was the store's locations slug).
+  { label: 'نقاط بيع معتمدة', href: '/sales-points-partners' },
   { label: 'تواصل معنا', href: `${STORE_URL}/contact` },
   { label: 'سياسة الاستبدال والاسترجاع', href: 'https://specialcarsa.com/%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%B1%D8%AC%D8%A7%D8%B9-%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%A8%D8%AF%D8%A7%D9%84/page-1134815720' },
   { label: 'الشروط والأحكام', href: `${STORE_URL}/policies/terms` },
