@@ -1,66 +1,173 @@
+import { Mail, MessageCircle } from 'lucide-react'
 import SocialIcons from './SocialIcons'
+
+const STORE_URL = 'https://specialcarsa.com'
+
+/*
+ * Brand/trust assets are hotlinked from the store (Salla) CDN using the EXACT
+ * source URLs. TODO(assets): download + self-host these so the footer doesn't
+ * depend on the Salla CDN long-term.
+ */
+const LOGO_URL =
+  'https://cdn.salla.sa/cdn-cgi/image/fit=scale-down,width=400,height=400,onerror=redirect,format=auto/jbRel/RqrCUr1zpCl8IQYaRe2KG2E2yBvSvxhBdA1m137A.png'
+const COMMERCIAL_REGISTER_URL =
+  'https://cdn.salla.network/cdn-cgi/image/fit=scale-down,width=70,height=70,onerror=redirect,format=auto/images/commercial-register.png'
+const TAX_URL = 'https://cdn.salla.network/images/tax.png?v=2.0.5'
+const SBC_URL = 'https://cdn.salla.network/images/sbc.png?v=2.0.5'
+const SBC_LINK =
+  'https://eauthenticate.saudibusiness.gov.sa/certificate-details/0000203507'
+
+// TODO(links): confirm the exact Salla page slugs for these.
+// Internal routes (leading '/') render as in-app links; everything else opens
+// in a new tab (stores keep external-store URLs).
+const FOOTER_LINKS: { label: string; href: string; external?: boolean }[] = [
+  // Feature: About page now lives in-app at /about (was the store's page slug).
+  { label: 'من نحن', href: '/about' },
+  { label: 'نقاط بيع معتمدة', href: `${STORE_URL}/locations` },
+  { label: 'تواصل معنا', href: `${STORE_URL}/contact` },
+  { label: 'سياسة الاستبدال والاسترجاع', href: `${STORE_URL}/policies/replacement-and-return` },
+  { label: 'الشروط والأحكام', href: `${STORE_URL}/policies/terms` },
+  { label: 'سياسة الخصوصية', href: `${STORE_URL}/policies/privacy` },
+]
+
+// TODO(payments): the exact payment ICON image URLs live in the store footer's
+// `salla-payments` block, which was NOT included here and is NOT derivable from
+// the CDN (every probed path 404s). These text chips are an honest placeholder
+// (real method names, NOT substitute icons) — swap in the real <img src> list
+// from the source HTML when available.
+const PAYMENTS = [
+  'mada',
+  'Apple Pay',
+  'Tamara',
+  'Mispay',
+  'Emkan',
+  'Madfu',
+  'بطاقة بنكية',
+  'تحويل بنكي',
+  'محفظة العميل',
+  'الدفع عند الاستلام',
+]
 
 export default function Footer() {
   return (
     <footer className="mt-auto border-t border-[var(--color-border)] bg-[var(--color-surface)]">
-      <div className="container py-12 md:py-16">
-        {/* brand / about + social — columns on desktop, stacked on mobile */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
-          {/* brand & about */}
-          <div className="space-y-3 md:space-y-4">
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/special-car-logo.avif"
-                alt="Special Car"
-                className="h-9 w-auto object-contain dark:hidden"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/darkmode-special-car-logo.png"
-                alt="Special Car"
-                className="hidden h-9 w-auto object-contain dark:block"
-              />
-              <span className="text-lg font-extrabold tracking-tight text-[var(--color-text)]">
-                Special Car
-              </span>
-            </div>
-            {/* TODO: insert approved About copy */}
-            <p className="max-w-md text-sm leading-relaxed text-[var(--color-text-secondary)]">
-              الشبكة الرسمية لنقاط بيع Special Car المعتمدة في المملكة العربية السعودية — تصفّح
-              نقاط البيع حسب المنطقة أو على الخريطة، وحدّد موقعك للوصول إلى الأقرب إليك.
-            </p>
-          </div>
-
-          {/* social */}
-          <div className="space-y-3 md:space-y-4">
-            <h3 className="text-sm font-bold text-[var(--color-text)]">تابعنا</h3>
-            {/* TODO: add real social URLs — safe placeholders rendered for now */}
+      <div className="container py-10 md:py-14">
+        {/* Centered, symmetric single column */}
+        <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+          {/* Brand — logo only (the wordmark already says "Special Car") */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={LOGO_URL}
+            alt="Special Car"
+            className="h-16 w-auto max-w-full md:h-20"
+          />
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            سبيشـل كـار وجهتك الاولى للعناية بسيـارتك تسوق وأنـت في بيـتك..
+          </p>
+          <div className="mt-5">
             <SocialIcons
               links={{
-                x: '#', // TODO: real X profile URL
-                facebook: '#', // TODO: real Facebook page URL
-                snapchat: '#', // TODO: real Snapchat profile
-                whatsapp: '0000000000', // TODO: real support WhatsApp number
-                email: '#', // TODO: real support email
+                instagram: 'https://www.instagram.com/special.carsa',
+                snapchat: 'https://www.snapchat.com/add/special.carsa',
+                tiktok: 'https://www.tiktok.com/@special.carsa',
               }}
             />
           </div>
-        </div>
 
-        {/* legal row */}
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-[var(--color-border)] pt-5 md:mt-10 md:pt-6 md:flex-row">
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            © {new Date().getFullYear()} Special Car. جميع الحقوق محفوظة
-          </p>
-          <a
-            href="https://specialcarsa.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-[var(--color-primary)] hover:underline"
-          >
-            specialcarsa.com
-          </a>
+          {/* Quick links */}
+          <div className="mt-8 w-full">
+            <h3 className="mb-3 text-sm font-bold text-[var(--color-text)]">روابط سريعة</h3>
+            <ul className="flex flex-col items-center gap-2.5 text-sm">
+              {FOOTER_LINKS.map((link) => {
+                const internal = link.href.startsWith('/')
+                return (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      {...(internal ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                      className="text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)]"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div className="mt-8 w-full">
+            <h3 className="mb-3 text-sm font-bold text-[var(--color-text)]">تواصل معنا</h3>
+            <ul className="flex flex-col items-center gap-2.5 text-sm">
+              <li>
+                <a
+                  href="https://wa.me/966501930897"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)]"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden />
+                  <span dir="ltr">+966 50 193 0897</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:special.carsa1@gmail.com"
+                  className="inline-flex items-center gap-2 break-all text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)]"
+                >
+                  <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                  <span>special.carsa1@gmail.com</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Trust / legal badges (exact source images) */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={COMMERCIAL_REGISTER_URL} alt="السجل التجاري" className="h-11 w-auto" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={TAX_URL} alt="الرقم الضريبي" className="h-11 w-auto" />
+            <a href={SBC_LINK} target="_blank" rel="noopener noreferrer" aria-label="موثق لدى منصة الأعمال">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={SBC_URL} alt="موثق لدى منصة الأعمال" className="h-11 w-auto" />
+            </a>
+          </div>
+          <div className="mt-3 space-y-1 text-xs text-[var(--color-text-secondary)]">
+            <p>
+              السجل التجاري: <span className="tnum font-semibold text-[var(--color-text)]">1010674447</span>
+            </p>
+            <p>
+              الرقم الضريبي: <span className="tnum font-semibold text-[var(--color-text)]">310802151800003</span>
+            </p>
+          </div>
+
+          {/* Payment methods */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {PAYMENTS.map((method) => (
+              <span
+                key={method}
+                className="inline-flex items-center rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-text-secondary)]"
+              >
+                {method}
+              </span>
+            ))}
+          </div>
+
+          {/* Copyright */}
+          <div className="mt-8 flex w-full flex-col items-center gap-2 border-t border-[var(--color-border)] pt-5">
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              © Special Car 2026. جميع الحقوق محفوظة
+            </p>
+            <a
+              href="https://specialcarsa.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-[var(--color-primary)] hover:underline"
+            >
+              specialcarsa.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>
