@@ -22,12 +22,12 @@ export default function RegionGroup({ region, selectedId, onSelect }: Props) {
   const isOpen = open
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-xs)]">
+    <div className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-xs)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={isOpen}
-        className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-4 py-4 text-start transition-all duration-[var(--duration)] ease-[var(--ease)] hover:bg-[var(--color-surface-raised)] hover:border hover:border-[var(--color-primary)]/40 hover:shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] sm:px-5"
+        className="flex w-full items-center gap-3 rounded-[var(--radius-xl)] px-4 py-3 text-start transition-all duration-[var(--duration)] ease-[var(--ease)] hover:bg-[var(--color-surface-raised)] hover:border hover:border-[var(--color-primary)]/40 hover:shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] sm:px-5"
       >
         <span
           className={[
@@ -47,9 +47,6 @@ export default function RegionGroup({ region, selectedId, onSelect }: Props) {
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-extrabold text-[var(--color-text)] sm:text-base">
             {region.label}
-          </span>
-          <span className="tnum text-xs text-[var(--color-text-secondary)]">
-            {region.entries.length} نقطة بيع
           </span>
         </span>
 

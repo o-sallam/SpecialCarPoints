@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button'
 const links = [
   { href: '/admin', label: 'لوحة التحكم' },
   { href: '/admin/sales-points', label: 'نقاط البيع' },
+  { href: '/admin/cities', label: 'المدن والمناطق' },
+  { href: '/admin/neighborhoods', label: 'الأحياء' },
   { href: '/admin/settings', label: 'الإعدادات' },
 ]
 

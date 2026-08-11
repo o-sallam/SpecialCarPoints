@@ -64,3 +64,12 @@ export async function updateCity(
   const doc = await db.collection('cities').findOne({ _id: new ObjectId(id) })
   return (doc ?? null) as City | null
 }
+
+/** Delete a city by id. Returns true if a document was deleted. Caller MUST
+ *  guard against sales_points / neighborhoods still referencing it first. */
+export async function deleteCity(id: string): Promise<boolean> {
+  const { db } = await connectToDatabase()
+  const res = await db.collection('cities').deleteOne({ _id: new ObjectId(id) })
+  if (res.deletedCount > 0) revalidateTag('cities')
+  return res.deletedCount > 0
+}

@@ -68,3 +68,17 @@ export const settingsSchema = z.object({
   storeUrl: z.string().url('Invalid store URL'),
   storeDescription: z.string().min(1, 'Description is required'),
 })
+
+// City ("المنطقة") — name + classification. `type` matches the City model.
+export const citySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  type: z.enum(['مدينة', 'محافظة', 'منطقة']),
+})
+
+// Neighborhood ("الحي") — name + parent city (FK).
+export const neighborhoodSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  cityId: z.string().refine((v) => ObjectId.isValid(v), {
+    message: 'Invalid cityId',
+  }),
+})
