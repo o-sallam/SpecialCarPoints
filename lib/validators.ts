@@ -22,6 +22,8 @@ export const salesPointSchema = z.object({
   extraLabel: z.string().nullable().optional(),
   googleMapUrl: z.string().url('Invalid Google Maps URL'),
   vip: z.boolean(),
+  // active defaults to true when absent (backward-compat for old clients).
+  active: z.boolean().default(true),
   lat: z.number().finite().nullable(),
   lng: z.number().finite().nullable(),
   socialLinks: z.object({

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import DataTable from '@/components/admin/DataTable'
 import ConfirmModal from '@/components/admin/ConfirmModal'
+import { Switch } from '@/components/ui/switch'
 
 export default function AdminSalesPointsList() {
   const router = useRouter()
@@ -35,6 +36,26 @@ export default function AdminSalesPointsList() {
     fetchData()
   }
 
+  // Flip the `active` visibility flag without leaving the list. Optimistic
+  // local update so the switch reflects immediately; reverts on failure.
+  async function handleToggleActive(id: string, value: boolean) {
+    const prev = data
+    setData((cur) =>
+      cur.map((item) => (item._id === id ? { ...item, active: value } : item)),
+    )
+    const res = await fetch(`/api/sales-points/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: value }),
+    })
+    if (res.ok) {
+      toast.success(value ? 'تم إظهار نقطة البيع' : 'تم إخفاء نقطة البيع')
+    } else {
+      setData(prev)
+      toast.error('تعذر تحديث حالة نقطة البيع')
+    }
+  }
+
   const columns = [
     { key: 'displayName', label: 'الاسم' },
     { key: 'cityName', label: 'المدينة' },
@@ -45,6 +66,28 @@ export default function AdminSalesPointsList() {
         <span className="text-[var(--color-text-secondary)]">
           {(item.neighborhoodName as string) || (item.extraLabel as string) || '—'}
         </span>
+      ),
+    },
+    {
+      key: 'active',
+      label: 'الحالة',
+      render: (item: Record<string, unknown>) => (
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={item.active !== false}
+            onCheckedChange={(v) => handleToggleActive(item._id as string, v)}
+            aria-label="إظهار / إخفاء نقطة البيع"
+          />
+          <span
+            className={
+              item.active === false
+                ? 'text-xs text-[var(--color-text-secondary)]'
+                : 'text-xs text-[var(--color-text)]'
+            }
+          >
+            {item.active === false ? 'مخفية' : 'ظاهرة'}
+          </span>
+        </div>
       ),
     },
     {

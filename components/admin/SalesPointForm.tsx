@@ -41,6 +41,7 @@ export interface SalesPointData {
   extraLabel: string | null
   googleMapUrl: string
   vip: boolean
+  active: boolean
   lat: number | null
   lng: number | null
   socialLinks: {
@@ -89,6 +90,7 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
       extraLabel: null,
       googleMapUrl: '',
       vip: false,
+      active: true,
       lat: null,
       lng: null,
       socialLinks: { ...defaultSocial },
@@ -314,14 +316,30 @@ export default function SalesPointForm({ initialData, onSubmit, isEditing }: Sal
         />
       )}
 
-      <div className="flex items-center gap-3">
-        <Switch
-          id="vip"
-          checked={form.vip}
-          onCheckedChange={(v) => update('vip', v)}
-          className="data-[state=checked]:bg-[var(--color-primary)]"
-        />
-        <Label htmlFor="vip">VIP</Label>
+      <div className="flex flex-wrap items-center gap-6">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="vip"
+            checked={form.vip}
+            onCheckedChange={(v) => update('vip', v)}
+            className="data-[state=checked]:bg-[var(--color-primary)]"
+          />
+          <Label htmlFor="vip">VIP</Label>
+        </div>
+        <div className="flex items-center gap-3">
+          <Switch
+            id="active"
+            checked={form.active}
+            onCheckedChange={(v) => update('active', v)}
+            className="data-[state=checked]:bg-[var(--color-primary)]"
+          />
+          <Label htmlFor="active">
+            ظاهر للجمهور
+            <span className="block text-xs font-normal text-[var(--color-text-secondary)]">
+              عند التعطيل لن تظهر نقطة البيع في الصفحة العامة
+            </span>
+          </Label>
+        </div>
       </div>
 
       <div>

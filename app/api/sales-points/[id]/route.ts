@@ -75,6 +75,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         extraLabel: data.extraLabel ?? null,
         googleMapUrl: data.googleMapUrl,
         vip: data.vip,
+        active: data.active,
         lat: data.lat,
         lng: data.lng,
         socialLinks: {
@@ -135,6 +136,40 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     revalidateTag('places')
     return NextResponse.json({ success: true })
   } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Lightweight visibility toggle used by the admin list's inline switch.
+// Avoids re-sending the whole document just to flip the `active` flag.
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const session = await getSession()
+    if (!session.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const active = z.boolean().nullable().default(true).parse(body?.active)
+
+    const { db } = await connectToDatabase()
+    const { id } = params
+    const filter = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { legacyId: id }
+
+    const result = await db
+      .collection('sales_points')
+      .updateOne(filter, { $set: { active, updatedAt: new Date() } })
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    revalidateTag('places')
+    return NextResponse.json({ success: true, active })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -6,7 +6,7 @@ import VipBadge from '@/components/public/VipBadge'
 import SocialIcons from '@/components/public/SocialIcons'
 import { getCitiesById } from '@/lib/data/cities'
 import { getNeighborhoodsById } from '@/lib/data/neighborhoods'
-import { composeDisplayName } from '@/lib/points'
+import { composeDisplayName, isActive } from '@/lib/points'
 
 const DetailMap = dynamic(() => import('./DetailMap'), { ssr: false })
 
@@ -19,7 +19,7 @@ export async function generateStaticParams() {
     const { db } = await connectToDatabase()
     const points = await db
       .collection('sales_points')
-      .find({}, { projection: { _id: 1 } })
+      .find({ active: { $ne: false } }, { projection: { _id: 1 } })
       .toArray()
 
     return points.map((p) => ({ id: p._id.toString() }))
@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
 export default async function LocationDetailPage({ params }: { params: { id: string } }) {
   const doc = await resolveDoc(params.id)
-  if (!doc) {
+  if (!doc || !isActive(doc)) {
     notFound()
   }
 

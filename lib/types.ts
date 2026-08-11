@@ -11,6 +11,9 @@ export interface SalesPoint {
   extraLabel: string | null
   googleMapUrl: string
   vip: boolean
+  /** visibility flag — only active points are shown publicly. Older docs
+   *  without this field are treated as active (see lib/points.isActive). */
+  active?: boolean
   lat: number | null
   lng: number | null
   socialLinks: {

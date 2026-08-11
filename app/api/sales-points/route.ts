@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         extraLabel,
         displayName: composeDisplayName(cityName, cityType, neighborhoodName, extraLabel),
         vip: p.vip,
+        active: p.active !== false,
         googleMapUrl: p.googleMapUrl,
         lat: p.lat ?? null,
         lng: p.lng ?? null,
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
       extraLabel: data.extraLabel ?? null,
       googleMapUrl: data.googleMapUrl,
       vip: data.vip,
+      active: data.active,
       lat: data.lat,
       lng: data.lng,
       socialLinks: {

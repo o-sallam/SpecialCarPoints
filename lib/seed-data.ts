@@ -39,6 +39,7 @@ export async function ensureSeeded(db: Db) {
     neighborhood: sanitizeString(item.neighborhood || ''),
     googleMapUrl: sanitizeString(item.url),
     vip: Boolean(item.vip),
+    active: true,
     lat: item.latitude ?? null,
     lng: item.longitude ?? null,
     socialLinks: { x: '', facebook: '', whatsapp: '', linkedin: '', email: '', messenger: '', snapchat: '' },

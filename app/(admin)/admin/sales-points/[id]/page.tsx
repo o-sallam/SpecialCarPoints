@@ -33,6 +33,7 @@ export default function EditSalesPointPage() {
           extraLabel: d.extraLabel ?? null,
           googleMapUrl: d.googleMapUrl || '',
           vip: !!d.vip,
+          active: d.active !== false,
           lat: d.lat ?? null,
           lng: d.lng ?? null,
           socialLinks: d.socialLinks || { ...defaultSocial },

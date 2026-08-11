@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const { db } = await connectToDatabase()
       const points = await db
         .collection('sales_points')
-        .find({}, { projection: { _id: 1 } })
+        .find({ active: { $ne: false } }, { projection: { _id: 1 } })
         .toArray()
 
       points.forEach((p) => {

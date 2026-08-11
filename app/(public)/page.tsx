@@ -2,7 +2,7 @@ import { getPlaces } from '@/lib/data/places'
 import { getCitiesById } from '@/lib/data/cities'
 import { getNeighborhoodsById } from '@/lib/data/neighborhoods'
 import AccordionLocator from '@/components/public/AccordionLocator'
-import { composeDisplayName, type POSEntry } from '@/lib/points'
+import { composeDisplayName, isActive, type POSEntry } from '@/lib/points'
 
 // Fallback ceiling only. Primary freshness is driven by the "places" data
 // cache tag (busted by revalidateTag('places') on every sales-point write),
@@ -19,7 +19,9 @@ export default async function HomePage() {
       getNeighborhoodsById(),
     ])
 
-    points = docs.map((p: any) => {
+    points = docs
+      .filter((p: any) => isActive(p))
+      .map((p: any) => {
       const s = p.socialLinks || {}
       const city = p.cityId ? citiesById.get(String(p.cityId)) : null
       const cityName = city?.name || 'مدن أخرى'

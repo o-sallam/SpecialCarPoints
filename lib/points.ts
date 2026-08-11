@@ -80,6 +80,13 @@ export function filterByCategory(entries: POSEntry[], category: CategoryId): POS
   return entries.filter((e) => !e.vip)
 }
 
+/** A point is active unless explicitly set to false. Older docs seeded
+ *  before the `active` flag was introduced have no field and stay visible.
+ *  Loosely typed to accept raw mongo docs (typed call sites use POSEntry). */
+export function isActive(point: { active?: boolean } | Record<string, unknown>): boolean {
+  return (point as { active?: boolean })?.active !== false
+}
+
 /**
  * Group entries by city (bucket key = e.cityId, display label = e.cityName),
  * drop empty groups, sort by entry count desc then city name — busiest city
