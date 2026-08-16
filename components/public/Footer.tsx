@@ -8,8 +8,7 @@ const STORE_URL = 'https://specialcarsa.com'
  * source URLs. TODO(assets): download + self-host these so the footer doesn't
  * depend on the Salla CDN long-term.
  */
-const LOGO_URL =
-  'https://cdn.salla.sa/cdn-cgi/image/fit=scale-down,width=400,height=400,onerror=redirect,format=auto/jbRel/RqrCUr1zpCl8IQYaRe2KG2E2yBvSvxhBdA1m137A.png'
+const LOGO_URL = '/darkmode-special-car-logo.png'
 const COMMERCIAL_REGISTER_URL =
   'https://cdn.salla.network/cdn-cgi/image/fit=scale-down,width=70,height=70,onerror=redirect,format=auto/images/commercial-register.png'
 const TAX_URL = 'https://cdn.salla.network/images/tax.png?v=2.0.5'
@@ -22,14 +21,13 @@ const SBC_LINK =
 // in a new tab (stores keep external-store URLs).
 const FOOTER_LINKS: { label: string; href: string; external?: boolean }[] = [
   // Feature: About page now lives in-app at /about (was the store's page slug).
-  { label: 'من نحن', href: '/about' },
+  { label: 'من نحن', href: 'https://specialcarsa.com/%D9%85%D8%AA%D8%AC%D8%B1-%D8%B3%D8%A8%D9%8A%D8%B4%D9%84-%D9%83%D8%A7%D8%B1/page-383466008' },
   // Feature: points-of-sale landing now in-app at /sales-points-partners
   // (was the store's locations slug).
   { label: 'نقاط بيع معتمدة', href: '/sales-points-partners' },
-  { label: 'تواصل معنا', href: `${STORE_URL}/contact` },
+  { label: 'موزع معتمد', href: 'https://specialcarsa.com/%D9%85%D9%88%D8%B2%D8%B9-%D9%85%D8%B9%D8%AA%D9%85%D8%AF/page-2012603864' },
+  { label: 'تواصل معنا', href: 'https://specialcarsa.com/%D8%AA%D9%88%D8%A7%D8%B5%D9%84-%D9%85%D8%B9%D9%86%D8%A7/page-1723783188' },
   { label: 'سياسة الاستبدال والاسترجاع', href: 'https://specialcarsa.com/%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%B1%D8%AC%D8%A7%D8%B9-%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D8%A8%D8%AF%D8%A7%D9%84/page-1134815720' },
-  { label: 'الشروط والأحكام', href: `${STORE_URL}/policies/terms` },
-  { label: 'سياسة الخصوصية', href: `${STORE_URL}/policies/privacy` },
 ]
 
 // TODO(payments): the exact payment ICON image URLs live in the store footer's
