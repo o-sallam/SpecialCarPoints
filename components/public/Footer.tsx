@@ -57,9 +57,15 @@ export default function Footer() {
           {/* Brand — logo only (the wordmark already says "Special Car") */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            src="/special-car-logo.avif"
+            alt="Special Car"
+            className="h-16 w-auto max-w-full md:h-20 dark:hidden"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={LOGO_URL}
             alt="Special Car"
-            className="h-16 w-auto max-w-full md:h-20"
+            className="hidden h-16 w-auto max-w-full md:h-20 dark:block"
           />
           <p className="mt-4 max-w-md text-sm leading-relaxed text-[var(--color-text-secondary)]">
             سبيشـل كـار وجهتك الاولى للعناية بسيـارتك تسوق وأنـت في بيـتك..
